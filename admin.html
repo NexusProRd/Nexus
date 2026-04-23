@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Pro - Panel de Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <script src="nexus-core.js"></script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
+        :root { --primary: #00a884; }
+        .bg-custom-primary { background-color: var(--primary) !important; transition: 0.3s; }
+        .text-primary { color: var(--primary) !important; }
+        
+        .tab-active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .theme-card { cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .theme-card.active { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .app-card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; transition: 0.2s ease; }
+        .status-pill { font-size: 9px; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scaleIn 0.25s ease-out; }
+        #adminContent { display: none; }
+        
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: -5px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div id="loginSection" class="fixed inset-0 bg-slate-900 z-[1000] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl text-center animate-scale-in">
+            <h2 class="text-3xl font-black text-slate-800 mb-1 italic">NEXUS <span class="text-emerald-500 font-black">PRO</span></h2>
+            <p id="loginSubtitle" class="text-slate-400 text-[10px] mb-8 font-bold uppercase tracking-widest italic flex justify-center items-center gap-2"><span class="loader hidden" id="pinLoader"></span> Conectando...</p>
+            <div class="mb-8 relative">
+                <input type="password" id="pinInput" maxlength="4" placeholder="••••" disabled
+                       class="w-full bg-slate-100 p-6 rounded-2xl text-center text-3xl font-black tracking-[1rem] outline-none border-4 border-transparent focus:border-emerald-500 transition-all opacity-50 disabled:bg-slate-200">
+                <div id="loginErrorContainer" class="mt-4 hidden">
+                    <p id="loginError" class="text-red-500 text-[10px] font-bold uppercase"></p>
+                    <a id="supportBtn" href="#" target="_blank" class="hidden mt-3 bg-slate-900 text-white text-[10px] font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 transition-colors">Contactar Soporte Técnico</a>
+                </div>
+            </div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase" id="loginHint">Introduce tu PIN de seguridad</p>
+        </div>
+    </div>
+
+    <div id="modalWizard" class="fixed inset-0 bg-slate-900 z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[3rem] p-8 shadow-2xl animate-scale-in overflow-y-auto max-h-[90vh]">
+            <h2 class="text-2xl font-black text-slate-800 mb-1">¡Bienvenido! 🚀</h2>
+            <p class="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-widest">Configuración Inicial</p>
+            
+            <div class="space-y-4">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700">
+                    <label class="text-[10px] font-black text-emerald-400 uppercase ml-1 block mb-3 tracking-widest">Crea tu PIN de Acceso (4 dígitos)</label>
+                    <div class="space-y-3">
+                        <input id="wizPin" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl outline-none text-xl text-center text-white font-black tracking-[0.5rem] border border-slate-600 focus:border-emerald-400 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-slate-500" placeholder="Ingresa 4 dígitos">
+                        <input id="wizPinConfirm" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl outline-none text-xl text-center text-white font-black tracking-[0.5rem] border border-slate-600 focus:border-emerald-400 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-slate-500" placeholder="Confirma el PIN">
+                    </div>
+                    <p class="text-[9px] text-slate-400 text-center mt-3 font-bold uppercase">No lo olvides. Te lo pediremos al entrar.</p>
+                </div>
+
+                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Nombre de la Tienda</label>
+                <input id="wizNombre" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-bold border border-slate-100" placeholder="Ej: Repuestos El Primo"></div>
+                
+                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2 text-emerald-600">WhatsApp Pedidos</label>
+                <input id="wizWA" type="text" class="w-full bg-emerald-50 p-4 rounded-2xl outline-none text-sm border border-emerald-100 font-black text-emerald-700" placeholder="Ej: 18290000000"></div>
+
+                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Categorías (Comas)</label>
+                <input id="wizCategorias" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm border border-slate-100" placeholder="Ej: Tenis, Polos, Pantalones"></div>
+
+                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Eslogan Corto</label>
+                <input id="wizEslogan" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm border border-slate-100" placeholder="Ej: Calidad y buen precio"></div>
+                
+                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Breve Reseña</label>
+                <textarea id="wizSobre" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm h-20 border border-slate-100 resize-none" placeholder="Somos una tienda dedicada a..."></textarea></div>
+                
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 block mb-2">Paleta de Colores</label>
+                    <div class="grid grid-cols-2 gap-2" id="wizThemeSelector">
+                        <div onclick="selectWizTheme('#10b981')" class="theme-card active p-3 rounded-xl bg-emerald-50 text-[10px] font-bold text-emerald-700 text-center" data-color="#10b981">🌿 Emerald</div>
+                        <div onclick="selectWizTheme('#0f172a')" class="theme-card p-3 rounded-xl bg-slate-900 text-[10px] font-bold text-slate-200 text-center" data-color="#0f172a">🌑 Midnight</div>
+                        <div onclick="selectWizTheme('#6366f1')" class="theme-card p-3 rounded-xl bg-indigo-50 text-[10px] font-bold text-indigo-700 text-center" data-color="#6366f1">💎 Royal Blue</div>
+                        <div onclick="selectWizTheme('#f43f5e')" class="theme-card p-3 rounded-xl bg-rose-50 text-[10px] font-bold text-rose-700 text-center" data-color="#f43f5e">🔥 Sunset</div>
+                    </div>
+                </div>
+
+                <button onclick="saveWizard()" id="btnWizSave" class="w-full bg-emerald-500 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs mt-2">Crear Tienda</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminContent">
+        <header id="headerMain" class="p-6 text-white rounded-b-[2.5rem] shadow-xl bg-custom-primary">
+            <div class="flex justify-between items-center mb-6">
+                <h1 id="displayTienda" class="text-xl font-black tracking-tight italic">Mi Tienda</h1>
+                <div class="flex gap-2">
+                    <button onclick="toggleModal('modalConfig', true)" class="bg-white/20 p-2 rounded-full backdrop-blur-md hover:bg-white/30 transition">⚙️</button>
+                    <button onclick="logout()" class="bg-white/20 p-2 rounded-full backdrop-blur-md hover:bg-red-500/30 transition">🚪</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 text-center bg-black/10 p-5 rounded-[2rem] backdrop-blur-md border border-white/10 shadow-inner">
+                <div><p class="text-[9px] uppercase opacity-90 font-bold mb-1">Inversión</p><p id="dashInversion" class="font-bold text-xs">RD$ 0</p></div>
+                <div><p class="text-[9px] uppercase font-black mb-1 text-yellow-300">Ganancia</p><p id="dashGanancia" class="font-bold text-xs text-yellow-300">RD$ 0</p></div>
+                <div><p class="text-[9px] uppercase opacity-90 font-bold mb-1">Stock</p><p id="dashStock" class="font-bold text-xs">0</p></div>
+            </div>
+        </header>
+
+        <nav class="flex justify-center gap-8 bg-white border-b sticky top-0 z-40 shadow-sm">
+            <button onclick="switchTab('productos')" id="tab-productos" class="p-4 font-black text-[11px] uppercase tracking-widest tab-active transition-colors">Inventario</button>
+            <button onclick="switchTab('pedidos')" id="tab-pedidos" class="relative p-4 font-black text-[11px] uppercase tracking-widest text-slate-400 transition-colors">
+                Pedidos
+                <span id="badge-pedidos" class="hidden absolute top-3 -right-2 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+            </button>
+        </nav>
+
+        <main id="view-productos" class="p-5">
+            <div class="mb-4 flex gap-2">
+                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="flex-1 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
+                <select id="statusFilter" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500">
+                    <option value="Todos">Todos</option>
+                    <option value="Publicado">Publicado</option>
+                    <option value="Archivado">Archivado</option>
+                </select>
+            </div>
+            <div id="listaProductos" class="space-y-3"></div>
+        </main>
+
+        <main id="view-pedidos" class="p-5 hidden">
+            <div id="listaPedidos" class="space-y-5"></div>
+        </main>
+    </div>
+
+    <div id="modalConfig" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 backdrop-blur-md">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-xl font-black mb-6 text-slate-800">Ajustes del Sistema</h3>
+            <div class="space-y-5">
+                <div>
+                    <label class="text-[9px] font-black text-emerald-600 ml-2 uppercase tracking-widest">Enlace de tu Google Sheet</label>
+                    <input id="cfgSheetId" type="text" class="w-full border-b-2 border-emerald-200 py-2 outline-none text-sm font-bold text-emerald-700 bg-emerald-50 px-2 rounded-t-lg" placeholder="Pega el enlace largo aquí">
+                </div>
+
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Modificar PIN de Acceso</label><input id="cfgPin" type="password" maxlength="4" class="w-full border-b-2 py-2 outline-none text-sm font-black tracking-[0.5rem] text-slate-800 placeholder:tracking-normal placeholder:font-normal" placeholder="••••"></div>
+                
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 ml-2 uppercase tracking-widest mb-2 block">Paleta de Marca</label>
+                    <div class="grid grid-cols-2 gap-2" id="themeSelector">
+                        <div onclick="selectTheme('#10b981')" class="theme-card p-3 rounded-xl bg-emerald-50 text-[10px] font-bold text-emerald-700 text-center" data-color="#10b981">🌿 Emerald</div>
+                        <div onclick="selectTheme('#0f172a')" class="theme-card p-3 rounded-xl bg-slate-900 text-[10px] font-bold text-slate-200 text-center" data-color="#0f172a">🌑 Midnight</div>
+                        <div onclick="selectTheme('#6366f1')" class="theme-card p-3 rounded-xl bg-indigo-50 text-[10px] font-bold text-indigo-700 text-center" data-color="#6366f1">💎 Royal Blue</div>
+                        <div onclick="selectTheme('#f43f5e')" class="theme-card p-3 rounded-xl bg-rose-50 text-[10px] font-bold text-rose-700 text-center" data-color="#f43f5e">🔥 Sunset</div>
+                    </div>
+                </div>
+
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Nombre Tienda</label><input id="cfgNombre" type="text" class="w-full border-b-2 py-2 outline-none text-sm font-bold"></div>
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Eslogan</label><input id="cfgEslogan" type="text" class="w-full border-b-2 py-2 outline-none text-sm"></div>
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Categorías (Separadas por comas)</label><input id="cfgCategorias" type="text" class="w-full border-b-2 py-2 outline-none text-sm"></div>
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">WhatsApp Pedidos</label><input id="cfgWA" type="text" placeholder="18290000000" class="w-full border-b-2 py-2 outline-none text-sm font-bold"></div>
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Sobre Nosotros</label><textarea id="cfgSobre" class="w-full border-2 border-slate-100 rounded-xl p-3 text-xs h-20 bg-slate-50 outline-none"></textarea></div>
+                
+                <button onclick="vincularYGuardar()" id="btnConfigSave" class="w-full bg-slate-900 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs">Guardar Cambios</button>
+                
+                <div class="border-t border-slate-100 pt-4 mt-4">
+                    <button onclick="triggerReset()" class="w-full bg-rose-50 text-rose-500 p-4 rounded-xl font-black uppercase text-[9px] tracking-widest border border-rose-100 hover:bg-rose-500 hover:text-white transition-colors">⚠️ Configuración Inicial (Borrar Todo)</button>
+                </div>
+
+                <button onclick="toggleModal('modalConfig', false)" class="w-full text-slate-400 text-[10px] font-bold p-2 text-center block uppercase mt-2">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalProduct" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 id="modalTitle" class="text-2xl font-black mb-6 text-slate-800 tracking-tighter">Producto</h3>
+            <input type="hidden" id="editId">
+            <div class="space-y-4">
+                <div class="flex flex-col items-center border-2 border-dashed border-slate-200 rounded-[2rem] p-6 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onclick="document.getElementById('fileInput').click()">
+                    <img id="preview" src="https://cdn-icons-png.flaticon.com/512/685/685655.png" class="w-16 h-16 opacity-20 object-contain rounded-xl">
+                    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="previewImg(event)">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-2">Toca para subir foto</p>
+                </div>
+                <input type="text" id="pNombre" placeholder="Nombre del producto" class="w-full bg-slate-100 p-4 rounded-2xl outline-none text-sm font-bold">
+                <select id="pCategoria" class="w-full bg-slate-100 p-4 rounded-2xl outline-none font-bold text-slate-600 text-sm"><option value="General">General</option></select>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="pPrecio" placeholder="P. Venta" class="w-full bg-slate-100 p-4 rounded-2xl outline-none text-sm font-black text-emerald-600">
+                    <input type="number" id="pCosto" placeholder="P. Costo" class="w-full bg-slate-100 p-4 rounded-2xl outline-none text-sm font-bold text-slate-400">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="pStock" placeholder="Unidades" class="w-full bg-slate-100 p-4 rounded-2xl outline-none text-sm font-bold">
+                    <select id="pEstado" class="w-full bg-slate-100 p-4 rounded-2xl outline-none font-black text-slate-600 text-[10px] uppercase"><option value="Publicado">Publicado</option><option value="Archivado">Archivado</option></select>
+                </div>
+                <textarea id="pDetalle" placeholder="Descripción o detalles..." class="w-full bg-slate-100 p-4 rounded-2xl outline-none h-20 resize-none text-sm"></textarea>
+                <button onclick="processProduct()" id="btnSave" class="w-full bg-emerald-500 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs">Guardar Producto</button>
+                <button onclick="toggleModal('modalProduct', false)" class="w-full text-slate-400 text-[10px] font-bold p-2 uppercase">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalSuccess" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-[100] backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 shadow-2xl text-center max-w-[280px] animate-scale-in">
+            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">✓</div>
+            <h4 class="text-lg font-bold mb-2 font-black text-slate-800">¡Completado!</h4>
+            <p id="successMessage" class="text-sm text-slate-500 mb-6">Operación exitosa.</p>
+            <button onclick="toggleModal('modalSuccess', false)" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-sm uppercase active:scale-95 transition-transform">Continuar</button>
+        </div>
+    </div>
+
+    <button onclick="openAddModal()" id="btnAddFloat" class="fixed bottom-8 right-6 w-16 h-16 rounded-full shadow-2xl text-4xl text-white flex items-center justify-center border-4 border-white bg-custom-primary z-40 active:scale-90 transition-transform">+</button>
+
+    <script>
+        // ==========================================
+        // 1. SISTEMA DE SEGURIDAD Y AUTO-TIMEOUT
+        // ==========================================
+        let appData = { productos: [], pedidos: [], config: {}, resumen: {} };
+        let currentPin = "1234";
+        let dataPreloaded = false;
+        let pollingInterval;
+        let pinAttempts = 0; // CONTADOR DE INTENTOS
+
+        // === ¡ATENCIÓN! CAMBIA ESTE NÚMERO POR TU WHATSAPP REAL DE SOPORTE ===
+        const telefonoSoporte = "18290000000"; 
+        
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            if(localStorage.getItem("nx_session") === "valid") {
+                inactivityTimer = setTimeout(() => {
+                    logout("Sesión cerrada por inactividad (10 min).");
+                }, 10 * 60 * 1000); 
+            }
+        }
+        window.addEventListener('mousemove', resetInactivityTimer);
+        window.addEventListener('keypress', resetInactivityTimer);
+        window.addEventListener('touchstart', resetInactivityTimer);
+
+        window.onload = async () => { 
+            const shopId = localStorage.getItem("nexus_shop_id");
+            if(shopId) {
+                document.getElementById('pinLoader').classList.remove('hidden');
+                document.getElementById('loginSubtitle').innerHTML = `<span class="loader" id="pinLoader"></span> Conectando motor...`;
+                
+                try {
+                    const res = await NexusCore.ejecutar('getInitData');
+                    if(res.success) {
+                        appData = res;
+                        currentPin = String(appData.config.PIN_Acceso || "1234"); 
+                        dataPreloaded = true;
+                        
+                        document.getElementById('pinLoader').classList.add('hidden');
+                        document.getElementById('loginSubtitle').innerText = "V4 SAAS SECURITY";
+                        
+                        const input = document.getElementById("pinInput");
+                        input.disabled = false;
+                        input.classList.remove('opacity-50');
+                        input.focus();
+
+                        if(localStorage.getItem("nx_session") === "valid") {
+                            initPreloaded();
+                        }
+                    } else { throw new Error("ID Inválido"); }
+                } catch(e) {
+                    alert("Error conectando con la tienda. Verifica tu enlace en Configuración.");
+                    toggleModal('modalConfig', true);
+                }
+            } else {
+                toggleModal('modalConfig', true);
+            }
+        }
+
+        const pinInput = document.getElementById("pinInput");
+        pinInput.addEventListener("input", () => {
+            if (pinInput.value.length === 4) {
+                if (pinInput.value === currentPin) {
+                    pinAttempts = 0; 
+                    localStorage.setItem("nx_session", "valid");
+                    initPreloaded();
+                } else {
+                    pinAttempts++;
+                    const container = document.getElementById("loginErrorContainer");
+                    const errorMsg = document.getElementById("loginError");
+                    const supportBtn = document.getElementById("supportBtn");
+                    
+                    container.classList.remove("hidden");
+                    
+                    if (pinAttempts >= 5) {
+                        pinInput.disabled = true;
+                        pinInput.classList.add('opacity-50');
+                        errorMsg.innerText = "Demasiados intentos. Tu panel ha sido bloqueado temporalmente.";
+                        
+                        // Mostramos el botón de soporte de WhatsApp
+                        supportBtn.href = `https://wa.me/${telefonoSoporte}?text=${encodeURIComponent("Hola, necesito asistencia. He bloqueado mi panel de Nexus Pro intentando ingresar el PIN.")}`;
+                        supportBtn.classList.remove("hidden");
+                        supportBtn.classList.add("inline-block");
+                        
+                        document.getElementById("loginHint").classList.add("hidden");
+                    } else {
+                        errorMsg.innerText = `PIN Incorrecto (Intento ${pinAttempts}/5)`;
+                        pinInput.value = "";
+                        setTimeout(() => { if(pinAttempts < 5) container.classList.add("hidden"); }, 2500);
+                    }
+                }
+            }
+        });
+
+        function logout(msg = null) { 
+            localStorage.removeItem("nx_session"); 
+            if(msg) alert(msg);
+            location.reload(); 
+        }
+
+        // ==========================================
+        // 2. INICIO CON DATOS PRE-CARGADOS
+        // ==========================================
+        let selectedColor = "#10b981";
+        let wizSelectedColor = "#10b981";
+        let currentTab = 'productos';
+
+        function initPreloaded() {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("adminContent").style.display = "block";
+            resetInactivityTimer();
+
+            applyConfig();
+            
+            if (!appData.config.Nombre_Tienda) {
+                toggleModal('modalWizard', true);
+            }
+
+            renderProductos(appData.productos);
+            renderPedidos();
+            
+            clearInterval(pollingInterval);
+            pollingInterval = setInterval(syncOrdersSilently, 5000);
+        }
+
+        // ==========================================
+        // 3. WIZARD Y FACTORY RESET
+        // ==========================================
+        function selectWizTheme(color) {
+            wizSelectedColor = color;
+            document.querySelectorAll("#wizThemeSelector .theme-card").forEach(c => {
+                c.classList.toggle("active", c.dataset.color === color);
+            });
+        }
+
+        async function saveWizard() {
+            const wizPin = document.getElementById("wizPin").value.trim();
+            const wizPinConfirm = document.getElementById("wizPinConfirm").value.trim();
+
+            if (wizPin.length !== 4) return alert("El PIN de acceso debe tener exactamente 4 números.");
+            if (wizPin !== wizPinConfirm) return alert("Los PINs no coinciden. Por favor verifícalos.");
+
+            const btn = document.getElementById("btnWizSave");
+            btn.innerText = "CREANDO TIENDA..."; btn.disabled = true;
+
+            const payload = {
+                PIN_Acceso: wizPin,
+                Nombre_Tienda: document.getElementById("wizNombre").value,
+                Eslogan: document.getElementById("wizEslogan").value,
+                Sobre_Nosotros: document.getElementById("wizSobre").value,
+                Color_Primario: wizSelectedColor,
+                Categorias_Lista: document.getElementById("wizCategorias").value || "General",
+                WhatsApp: document.getElementById("wizWA").value 
+            };
+
+            const res = await NexusCore.ejecutar('vincularTienda', payload);
+            if(res.success) { location.reload(); }
+        }
+
+        async function triggerReset() {
+            if(confirm("⚠️ ADVERTENCIA: Si procede a realizar la configuración inicial debe tener pendiente que SE LE BORRARÁN TODOS LOS PRODUCTOS y pedidos de su tienda.\n\n¿Está seguro de que desea continuar?")) {
+                let pinConfirm = prompt("Ingrese su PIN de seguridad para confirmar:");
+                if(pinConfirm === currentPin) {
+                    toggleModal('modalConfig', false);
+                    const res = await NexusCore.ejecutar('resetTienda');
+                    if(res.success) {
+                        alert("Tienda borrada con éxito. Proceda a configurarla nuevamente.");
+                        appData.config = {}; 
+                        toggleModal('modalWizard', true);
+                    }
+                } else {
+                    alert("PIN incorrecto. Operación cancelada por seguridad.");
+                }
+            }
+        }
+
+        // ==========================================
+        // 4. CONFIGURACIÓN DEL SISTEMA
+        // ==========================================
+        function applyConfig() {
+            const cfg = appData.config || {};
+            
+            document.getElementById("cfgSheetId").value = localStorage.getItem("nexus_shop_id") || "";
+            document.getElementById("cfgPin").value = currentPin; 
+            
+            document.getElementById("displayTienda").innerText = cfg.Nombre_Tienda || "Mi Tienda";
+            document.getElementById("cfgNombre").value = cfg.Nombre_Tienda || "";
+            document.getElementById("cfgEslogan").value = cfg.Eslogan || "";
+            document.getElementById("cfgCategorias").value = cfg.Categorias_Lista || "";
+            document.getElementById("cfgWA").value = cfg.WhatsApp || "";
+            document.getElementById("cfgSobre").value = cfg.Sobre_Nosotros || "";
+            
+            selectTheme(cfg.Color_Primario || "#10b981");
+            
+            let categoriasApp = ["General"];
+            if(cfg.Categorias_Lista) categoriasApp = ["General", ...cfg.Categorias_Lista.split(",").map(c => c.trim()).filter(Boolean)];
+            document.getElementById("pCategoria").innerHTML = categoriasApp.map(c => `<option value="${c}">${c}</option>`).join("");
+        }
+
+        function selectTheme(color) {
+            selectedColor = color;
+            document.documentElement.style.setProperty("--primary", color);
+            document.querySelectorAll("#themeSelector .theme-card").forEach(c => {
+                c.classList.toggle("active", c.dataset.color === color);
+            });
+        }
+
+        async function vincularYGuardar() {
+            let inputVal = document.getElementById("cfgSheetId").value.trim();
+            if(!inputVal) return alert("Por favor, pega el enlace de tu Google Sheet.");
+            
+            const newPin = document.getElementById("cfgPin").value.trim();
+            if(newPin && newPin.length !== 4) return alert("El PIN debe tener 4 dígitos.");
+
+            const btn = document.getElementById("btnConfigSave");
+            btn.innerText = "Sincronizando..."; btn.disabled = true;
+
+            let finalId = inputVal;
+            if (inputVal.includes("docs.google.com/spreadsheets/d/")) {
+                const match = inputVal.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) finalId = match[1]; 
+                else { btn.innerText = "Guardar Cambios"; btn.disabled = false; return alert("Enlace inválido."); }
+            }
+            
+            localStorage.setItem("nexus_shop_id", finalId);
+
+            const payload = {
+                Nombre_Tienda: document.getElementById("cfgNombre").value,
+                Eslogan: document.getElementById("cfgEslogan").value,
+                Categorias_Lista: document.getElementById("cfgCategorias").value,
+                WhatsApp: document.getElementById("cfgWA").value,
+                Sobre_Nosotros: document.getElementById("cfgSobre").value,
+                Color_Primario: selectedColor
+            };
+
+            if(newPin) payload.PIN_Acceso = newPin;
+
+            const res = await NexusCore.ejecutar('vincularTienda', payload);
+            if(res.success) {
+                location.reload(); 
+            } else {
+                alert("Error: " + res.message);
+                btn.innerText = "Guardar Cambios"; btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // 5. POLLING SILENCIOSO
+        // ==========================================
+        async function syncOrdersSilently() {
+            try {
+                const res = await NexusCore.ejecutar('getOrdersOnly');
+                if(res.success) {
+                    const oldOrders = JSON.stringify(appData.pedidos);
+                    const newOrders = JSON.stringify(res.pedidos);
+                    if (oldOrders !== newOrders) {
+                        appData.pedidos = res.pedidos;
+                        if (currentTab !== 'pedidos') document.getElementById('badge-pedidos').classList.remove('hidden');
+                        else renderPedidos();
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // 6. RENDER DE PRODUCTOS E INVENTARIO
+        // ==========================================
+        function applyFilters() {
+            const term = document.getElementById("searchInput").value.toLowerCase();
+            const status = document.getElementById("statusFilter").value;
+            renderProductos(appData.productos.filter(p => p.nombre.toLowerCase().includes(term) && (status === "Todos" || p.estado === status)));
+        }
+
+        function renderProductos(prods) {
+            document.getElementById("dashInversion").innerText = `RD$ ${Number(appData.resumen.totalInversion || 0).toLocaleString()}`;
+            document.getElementById("dashGanancia").innerText = `RD$ ${Number(appData.resumen.gananciaEstimada || 0).toLocaleString()}`;
+            document.getElementById("dashStock").innerText = appData.resumen.productosActivos || 0;
+
+            const container = document.getElementById("listaProductos");
+            if(prods.length === 0) { container.innerHTML = `<p class="text-center text-[10px] text-slate-400 font-bold p-6">Inventario vacío.</p>`; return; }
+
+            container.innerHTML = prods.map(p => `
+                <div class="app-card p-4 flex items-center gap-4 border-l-[6px] ${p.estado === 'Archivado' ? 'border-slate-300 opacity-60' : 'border-custom-primary'}">
+                    <img src="${p.imagen}" class="w-14 h-14 object-cover rounded-xl bg-slate-50 cursor-pointer" onclick="openEditModal('${p.id}')">
+                    <div class="flex-1" onclick="openEditModal('${p.id}')">
+                        <div class="flex justify-between items-start mb-1 gap-2"><h4 class="text-[12px] font-black text-slate-700 leading-tight uppercase">${p.nombre}</h4><span class="status-pill ${p.estado === 'Archivado' ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'}">${p.estado}</span></div>
+                        <p class="text-[14px] font-black text-primary tracking-tighter">RD$ ${Number(p.precio).toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">Stock: ${p.stock} | ${p.categoria || 'Gral'}</p>
+                    </div>
+                </div>`).join("");
+        }
+
+        async function processProduct() {
+            const btn = document.getElementById("btnSave"); btn.disabled = true; btn.innerText = "SUBIENDO...";
+            const file = document.getElementById("fileInput").files[0]; const id = document.getElementById("editId").value;
+            let base64 = null; if(file) base64 = await NexusCore.archivoABase64(file);
+
+            const payload = {
+                id: id, nombre: document.getElementById("pNombre").value, categoria: document.getElementById("pCategoria").value,
+                precio: document.getElementById("pPrecio").value, costo: document.getElementById("pCosto").value,
+                stock: document.getElementById("pStock").value, estado: document.getElementById("pEstado").value,
+                detalle: document.getElementById("pDetalle").value, foto: base64, fileName: file ? file.name : ""
+            };
+
+            const res = await NexusCore.ejecutar('saveProduct', payload);
+            if (res.success) {
+                toggleModal("modalProduct", false); 
+                document.getElementById("successMessage").innerText = id ? "Producto actualizado." : "Nuevo producto guardado.";
+                toggleModal("modalSuccess", true);
+                
+                // ACTUALIZACIÓN INSTANTÁNEA EN PANTALLA
+                const refreshData = await NexusCore.ejecutar('getInitData');
+                if (refreshData.success) {
+                    appData = refreshData;
+                    applyFilters(); 
+                }
+            } else { alert("Error al guardar: " + res.message); }
+            btn.disabled = false; btn.innerText = "Guardar Producto";
+        }
+
+        // ==========================================
+        // 7. GESTOR DE PEDIDOS (DISEÑO MEJORADO)
+        // ==========================================
+        function renderPedidos() {
+            const container = document.getElementById("listaPedidos");
+            if(!appData.pedidos || appData.pedidos.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-3xl">No hay pedidos registrados</div>`; return; }
+
+            container.innerHTML = appData.pedidos.map((p) => {
+                // Colores limpios
+                let statusClass = "bg-yellow-50 text-yellow-600"; 
+                let borderClass = "border-l-yellow-400";
+                
+                if (p.estado === 'Confirmado') { statusClass = "bg-emerald-50 text-emerald-600"; borderClass = "border-l-emerald-400"; }
+                if (p.estado === 'Cancelado') { statusClass = "bg-rose-50 text-rose-600"; borderClass = "border-l-rose-400"; }
+                if (p.estado === 'Expirado') { statusClass = "bg-slate-100 text-slate-500"; borderClass = "border-l-slate-300"; }
+
+                const detallesHtml = p.detalles.split('\n').filter(l => l.trim() !== '').map(l => `<div class="border-b border-slate-100 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0 text-slate-600">▪️ ${l}</div>`).join('');
+
+                return `
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[6px] ${borderClass} flex flex-col gap-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[13px] font-black text-slate-800 tracking-tighter">ORDEN ${p.id}</p>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">${p.fecha}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${statusClass}">${p.estado}</span>
+                    </div>
+                    
+                    <div class="text-[11px] font-semibold bg-slate-50/50 p-3 rounded-xl border border-slate-50">
+                        ${detallesHtml}
+                    </div>
+                    
+                    <div class="flex justify-between items-center pt-2">
+                        <div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Total</p>
+                            <p class="text-lg font-black text-slate-800 tracking-tighter">RD$ ${Number(p.total).toLocaleString()}</p>
+                        </div>
+                        
+                        ${p.estado === 'Pendiente' ? `
+                            <div class="flex gap-2">
+                                <button onclick="updateStatus('${p.id}', 'Cancelado')" class="bg-white border border-slate-200 text-slate-500 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-sm">Rechazar</button>
+                                <button onclick="updateStatus('${p.id}', 'Confirmado')" class="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase shadow-md shadow-emerald-200 active:scale-95 transition-all">Cobrar</button>
+                            </div>
+                        ` : ''}
+                        
+                        ${p.estado === 'Expirado' ? `<span class="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">⏳ Devuelto autom.</span>` : ''}
+                        ${p.estado === 'Cancelado' ? `<span class="text-[9px] text-rose-400 font-bold bg-rose-50 px-2 py-1 rounded-lg">❌ Devuelto manual</span>` : ''}
+                    </div>
+                </div>`;
+            }).join("");
+        }
+
+        async function updateStatus(orderId, nuevoEstado) {
+            const accion = nuevoEstado === 'Confirmado' ? 'CONFIRMAR pago' : 'RECHAZAR y DEVOLVER stock';
+            if(!confirm(`¿Deseas ${accion} para la orden ${orderId}?`)) return;
+            const res = await NexusCore.ejecutar('updateOrderStatus', { orderId, nuevoEstado });
+            if(res.success) { 
+                document.getElementById("successMessage").innerText = `Orden ${nuevoEstado}.`; 
+                toggleModal("modalSuccess", true); 
+                const refreshData = await NexusCore.ejecutar('getInitData');
+                if (refreshData.success) { appData = refreshData; renderPedidos(); }
+            }
+        }
+
+        // ==========================================
+        // 8. NAVEGACIÓN Y MODALES
+        // ==========================================
+        async function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById("view-productos").classList.toggle("hidden", tab !== 'productos'); document.getElementById("view-pedidos").classList.toggle("hidden", tab !== 'pedidos');
+            document.getElementById("tab-productos").classList.toggle("tab-active", tab === 'productos'); document.getElementById("tab-productos").classList.toggle("text-slate-400", tab !== 'productos');
+            document.getElementById("tab-pedidos").classList.toggle("tab-active", tab === 'pedidos'); document.getElementById("tab-pedidos").classList.toggle("text-slate-400", tab !== 'pedidos');
+            document.getElementById("btnAddFloat").style.display = tab === 'productos' ? 'flex' : 'none';
+
+            if (tab === 'pedidos') {
+                document.getElementById('badge-pedidos').classList.add('hidden'); renderPedidos(); 
+                const btnTab = document.getElementById("tab-pedidos"); btnTab.innerHTML = `ACTUALIZANDO...`;
+                await syncOrdersSilently(); 
+                btnTab.innerHTML = `Pedidos <span id="badge-pedidos" class="hidden absolute top-3 -right-2 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>`;
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById("editId").value = ""; document.getElementById("pNombre").value = ""; document.getElementById("pPrecio").value = "";
+            document.getElementById("pCosto").value = ""; document.getElementById("pStock").value = ""; document.getElementById("pDetalle").value = "";
+            document.getElementById("preview").src = "https://cdn-icons-png.flaticon.com/512/685/685655.png"; toggleModal("modalProduct", true);
+        }
+
+        function openEditModal(id) {
+            const p = appData.productos.find(x => x.id == id);
+            document.getElementById("editId").value = p.id; document.getElementById("pNombre").value = p.nombre; document.getElementById("pCategoria").value = p.categoria || "General";
+            document.getElementById("pPrecio").value = p.precio; document.getElementById("pCosto").value = p.costo || ""; document.getElementById("pStock").value = p.stock;
+            document.getElementById("pEstado").value = p.estado; document.getElementById("pDetalle").value = p.detalle || ""; document.getElementById("preview").src = p.imagen;
+            toggleModal("modalProduct", true);
+        }
+
+        function previewImg(e) { const f = e.target.files[0]; if(f) document.getElementById("preview").src = URL.createObjectURL(f); }
+        function toggleModal(id, s) { document.getElementById(id).classList.toggle("hidden", !s); if(s) document.getElementById(id).classList.add("flex"); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="tabTitle">Nexus Pro - Catálogo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="config.js"></script>
+    <script src="nexus-core.js"></script>
+
+    <style>
+        :root { --primary: #00a884; --bg: #f1f5f9; --dark: #0f172a; --white: #ffffff; --accent: #ef4444; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; color: var(--dark); }
+        
+        .sticky-top { position: sticky; top: 0; z-index: 1000; background: var(--white); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        header { padding: 15px 20px; text-align: center; border-bottom: 1px solid #f1f5f9; }
+        .logo { font-size: 22px; font-weight: 900; color: var(--primary); text-decoration: none; font-style: italic; display: block; }
+        .slogan { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .cats-bar { display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; scrollbar-width: none; background: white; }
+        .cats-bar::-webkit-scrollbar { display: none; }
+        .cat-btn { padding: 8px 18px; border-radius: 2rem; border: 1px solid #f1f5f9; background: #f8fafc; color: #64748b; cursor: pointer; font-weight: 700; font-size: 10px; text-transform: uppercase; white-space: nowrap; }
+        .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .main-container { padding: 15px; max-width: 1200px; margin: 0 auto; }
+        .search-container { margin-bottom: 15px; }
+        .search-container input { width: 100%; padding: 14px 20px; border-radius: 1.2rem; border: 1px solid #e2e8f0; outline: none; font-size: 14px; box-sizing: border-box; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; } }
+
+        .card { background: var(--white); border-radius: 1.8rem; overflow: hidden; border: 1px solid #e2e8f0; display: flex; flex-direction: column; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .card-img { width: 100%; height: 160px; object-fit: cover; cursor: pointer; background: #f8fafc; }
+        .card-body { padding: 15px; text-align: center; }
+        .card-title { font-size: 12px; font-weight: 700; height: 2.6em; overflow: hidden; margin-bottom: 8px; color: var(--dark); cursor: pointer; }
+        .card-price { font-size: 15px; font-weight: 900; color: var(--primary); margin-bottom: 12px; }
+
+        .qty-mini { display: flex; align-items: center; background: #f1f5f9; border-radius: 1rem; padding: 4px; margin-bottom: 10px; justify-content: space-between; }
+        .qty-mini button { width: 30px; height: 30px; border-radius: 8px; border: none; background: white; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-mini span { font-weight: 800; font-size: 13px; }
+
+        .btn-mini-group { display: flex; gap: 6px; }
+        .btn-mini-add { flex: 1; background: #e2e8f0; border: none; padding: 12px 2px; border-radius: 10px; font-size: 9px; font-weight: 800; cursor: pointer; color: var(--dark); }
+        .btn-mini-buy { flex: 1.3; background: var(--primary); color: white; border: none; padding: 12px 2px; border-radius: 10px; font-size: 9px; font-weight: 800; cursor: pointer; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 2000; display: none; }
+        .overlay.open { display: block; }
+
+        .modal-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; max-height: 85vh; background: white; z-index: 2001; border-radius: 2.5rem; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-popup.open { display: flex; }
+        .modal-scroll { overflow-y: auto; }
+
+        footer { background: #0f172a; color: white; padding: 25px 20px 100px 20px; text-align: center; border-top-left-radius: 3rem; border-top-right-radius: 3rem; }
+        .footer-brand { font-size: 13px; font-weight: 900; color: #38bdf8; margin-bottom: 5px; display: block; }
+        .btn-nexus-sm { font-size: 11px; color: #25d366; text-decoration: none; font-weight: 800; }
+
+        .cart-float { position: fixed; bottom: 25px; right: 25px; background: var(--dark); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1500; box-shadow: 0 10px 25px rgba(0,0,0,0.3); cursor: pointer; font-size: 24px; }
+        .cart-count { position: absolute; top: -2px; right: -2px; background: var(--accent); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; border: 3px solid white; }
+
+        .cart-side { position: fixed; top: 0; right: -100%; width: 100%; max-width: 360px; height: 100%; background: white; z-index: 2500; transition: 0.4s; display: flex; flex-direction: column; }
+        .cart-side.open { right: 0; }
+        .agotado-tag { position: absolute; top: 12px; left: 12px; background: var(--accent); color: white; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 900; z-index: 5; }
+    </style>
+</head>
+<body>
+
+<div class="sticky-top">
+    <header>
+        <a href="#" class="logo" id="headerLogo">Nexus Store</a>
+        <span class="slogan" id="headerSlogan">Cargando catálogo...</span>
+    </header>
+    <div class="cats-bar" id="categoryBar"></div>
+</div>
+
+<div class="main-container">
+    <div class="search-container"><input type="text" id="searchInput" oninput="filtrarBusqueda()" placeholder="¿Qué buscas hoy?"></div>
+    <div class="products-grid" id="mainGrid"></div>
+    <div class="about-section" id="aboutContainer" style="display:none; margin-top: 20px;">
+        <div style="background:white; padding:25px; border-radius:2rem; text-align:center; border:1px solid #e2e8f0;">
+            <span style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase;">Sobre Nosotros</span>
+            <p id="aboutText" style="font-size:13px; color:#64748b; margin-top:10px; line-height:1.6;"></p>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <span class="footer-brand">NEXUS PRO PLATFORM</span>
+    <a href="https://wa.me/8295210521" class="btn-nexus-sm">🚀 ¡QUIERO MI TIENDA AQUÍ!</a>
+</footer>
+
+<div class="overlay" id="globalOverlay" onclick="closeAllModals()"></div>
+
+<div id="detailModal" class="modal-popup">
+    <div class="modal-scroll">
+        <div style="position:relative;">
+             <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px; background:white; width:35px; height:35px; border-radius:50%; border:none; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:10;">✕</button>
+             <img id="detImg" src="" style="width:100%; height:280px; object-fit:cover;">
+        </div>
+        <div style="padding:25px;">
+            <span id="detCat" style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase;">Categoría</span>
+            <h2 id="detName" style="font-size:20px; font-weight:800; margin:8px 0;">Nombre</h2>
+            <div id="detPrice" style="font-size:22px; font-weight:900; color:var(--primary); margin-bottom:15px;">RD$ 0</div>
+            <p id="detDesc" style="font-size:14px; color:#64748b; line-height:1.6; margin-bottom:20px;"></p>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:15px;">
+                <div class="qty-mini" style="width:150px;">
+                    <button onclick="updateQty('det', -1)">-</button>
+                    <span id="qty-det">1</span>
+                    <button onclick="updateQty('det', 1)">+</button>
+                </div>
+                <div class="btn-mini-group" id="detActionGroup" style="width:100%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cart-float" onclick="toggleCart(true)">
+    🛍️ <div class="cart-count" id="cartCount">0</div>
+</div>
+
+<div id="cartModal" class="cart-side">
+    <div style="padding:25px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+        <b style="font-size:18px;">Tu Carrito</b>
+        <button onclick="toggleCart(false)" style="border:none; background:none; font-size:24px; cursor:pointer;">✕</button>
+    </div>
+    <div id="cartList" style="flex-grow:1; overflow-y:auto; padding:25px;"></div>
+    <div style="padding:25px; border-top:1px solid #f1f5f9; background:#f8fafc;">
+        <div style="display:flex; justify-content:space-between; font-weight:900; margin-bottom:15px;"><span style="color:#94a3b8; font-size:14px;">TOTAL</span><span id="cartTotal">RD$ 0</span></div>
+        <button onclick="enviarWhatsApp()" id="btnCheckout" style="width:100%; background:#25d366; color:white; border:none; padding:18px; border-radius:1.2rem; font-weight:800; cursor:pointer;">CONFIRMAR PEDIDO</button>
+    </div>
+</div>
+
+<script>
+    let dbProductos = []; let dbConfig = {}; let carrito = JSON.parse(localStorage.getItem('nexus_cart')) || [];
+
+    async function cargarTienda() {
+        const res = await NexusCore.ejecutar('getInitData');
+        if(res.success) {
+            dbConfig = res.config;
+            dbProductos = res.productos.filter(p => p.estado === "Publicado");
+            document.getElementById("headerLogo").innerText = dbConfig.Nombre_Tienda || "Tienda";
+            document.getElementById("headerSlogan").innerText = dbConfig.Eslogan || "Bienvenido";
+            if(dbConfig.Sobre_Nosotros) { document.getElementById("aboutText").innerText = dbConfig.Sobre_Nosotros; document.getElementById("aboutContainer").style.display = "block"; }
+            if(dbConfig.Color_Primario) document.documentElement.style.setProperty("--primary", dbConfig.Color_Primario);
+            renderizarCategorias(); renderizarProductos(dbProductos); actualizarCarritoUI();
+        } else {
+            document.getElementById("headerSlogan").innerText = "ERROR AL CONECTAR CON LA BASE DE DATOS.";
+        }
+    }
+
+    function renderizarCategorias() {
+        let cats = ["Todos"];
+        if(dbConfig.Categorias_Lista) cats = ["Todos", ...dbConfig.Categorias_Lista.split(",").map(c => c.trim()).filter(Boolean)];
+        document.getElementById("categoryBar").innerHTML = cats.map(c => `<button class="cat-btn ${c === 'Todos' ? 'active' : ''}" onclick="filtrarCat('${c}', this)">${c}</button>`).join("");
+    }
+
+    function filtrarCat(cat, btn) {
+        document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderizarProductos(cat === "Todos" ? dbProductos : dbProductos.filter(p => p.categoria === cat));
+    }
+
+    function renderizarProductos(lista) {
+        const grid = document.getElementById("mainGrid");
+        grid.innerHTML = lista.map(p => {
+            const agotado = Number(p.stock) <= 0;
+            return `
+            <div class="card ${agotado ? 'agotado' : ''}">
+                ${agotado ? '<div class="agotado-tag">AGOTADO</div>' : ''}
+                <img src="${p.imagen}" class="card-img" onclick="verDetalle('${p.id}')">
+                <div class="card-body">
+                    <div class="card-title" onclick="verDetalle('${p.id}')">${p.nombre}</div>
+                    <div class="card-price">RD$ ${Number(p.precio).toLocaleString()}</div>
+                    <div class="qty-mini">
+                        <button onclick="updateQty('${p.id}', -1)">-</button>
+                        <span id="qty-${p.id}">1</span>
+                        <button onclick="updateQty('${p.id}', 1)">+</button>
+                    </div>
+                    <div class="btn-mini-group">
+                        <button class="btn-mini-add" onclick="addCart('${p.id}')">CARRITO</button>
+                        <button class="btn-mini-buy" onclick="buyNow('${p.id}')">COMPRAR</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join("");
+    }
+
+    function verDetalle(id) {
+        const p = dbProductos.find(x => x.id == id);
+        document.getElementById("detImg").src = p.imagen;
+        document.getElementById("detCat").innerText = p.categoria;
+        document.getElementById("detName").innerText = p.nombre;
+        document.getElementById("detPrice").innerText = "RD$ " + Number(p.precio).toLocaleString();
+        document.getElementById("detDesc").innerText = p.detalle || "Sin descripción.";
+        document.getElementById("qty-det").innerText = "1";
+        document.getElementById("detActionGroup").innerHTML = `<button class="btn-mini-add" style="padding:18px" onclick="addCart('${p.id}', true)">AÑADIR AL CARRITO</button><button class="btn-mini-buy" style="padding:18px" onclick="buyNow('${p.id}', true)">COMPRAR AHORA</button>`;
+        toggleDetail(true);
+    }
+
+    function updateQty(id, delta) {
+        const el = document.getElementById(id === 'det' ? 'qty-det' : `qty-${id}`);
+        let v = parseInt(el.innerText) + delta;
+        if(v < 1) v = 1; el.innerText = v;
+    }
+
+    function addCart(id, fromDetail = false) {
+        const p = dbProductos.find(x => x.id == id);
+        const q = parseInt(document.getElementById(fromDetail ? 'qty-det' : `qty-${id}`).innerText);
+        if(Number(p.stock) < q) return alert("Sin stock suficiente.");
+        const exist = carrito.find(x => x.id == id);
+        if(exist) exist.qty += q; else carrito.push({...p, qty: q});
+        localStorage.setItem('nexus_cart', JSON.stringify(carrito));
+        actualizarCarritoUI(); if(fromDetail) closeAllModals();
+    }
+
+    function buyNow(id, fromDetail = false) {
+        const p = dbProductos.find(x => x.id == id);
+        const q = parseInt(document.getElementById(fromDetail ? 'qty-det' : `qty-${id}`).innerText);
+        if(Number(p.stock) < q) return alert("Sin stock suficiente.");
+        carrito = [{...p, qty: q}]; localStorage.setItem('nexus_cart', JSON.stringify(carrito));
+        actualizarCarritoUI(); closeAllModals(); toggleCart(true);
+    }
+
+    function actualizarCarritoUI() {
+        let total = 0;
+        document.getElementById("cartList").innerHTML = carrito.length === 0 ? '<p style="text-align:center; color:#94a3b8; margin-top:40px;">Tu carrito está vacío</p>' : 
+        carrito.map(i => {
+            total += i.precio * i.qty;
+            return `<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:15px; border-bottom:1px dashed #eee; padding-bottom:10px; align-items:center;">
+                <div><b>${i.nombre}</b><br><span style="color:var(--primary); font-weight:700;">${i.qty} x RD$${Number(i.precio).toLocaleString()}</span></div>
+                <button onclick="remover('${i.id}')" style="border:none; color:#ef4444; background:#fff1f1; width:32px; height:32px; border-radius:8px; font-weight:800; cursor:pointer;">✕</button>
+            </div>`;
+        }).join("");
+        document.getElementById("cartTotal").innerText = "RD$ " + total.toLocaleString();
+        document.getElementById("cartCount").innerText = carrito.reduce((a, b) => a + b.qty, 0);
+    }
+
+    function remover(id) { carrito = carrito.filter(x => x.id != id); localStorage.setItem('nexus_cart', JSON.stringify(carrito)); actualizarCarritoUI(); }
+    function toggleCart(s) { document.getElementById("cartModal").classList.toggle("open", s); document.getElementById("globalOverlay").classList.toggle("open", s); }
+    function toggleDetail(s) { document.getElementById("detailModal").classList.toggle("open", s); document.getElementById("globalOverlay").classList.toggle("open", s); }
+    function closeAllModals() { toggleCart(false); toggleDetail(false); }
+
+    function filtrarBusqueda() {
+        const term = document.getElementById("searchInput").value.toLowerCase();
+        renderizarProductos(dbProductos.filter(p => p.nombre.toLowerCase().includes(term)));
+    }
+
+    async function enviarWhatsApp() {
+        if(!carrito.length) return;
+        const btn = document.getElementById('btnCheckout'); btn.innerText = "PROCESANDO..."; btn.disabled = true;
+        const res = await NexusCore.ejecutar('procesarPedido', { carrito: carrito, cliente: "Cliente Web" });
+        if(res.success) {
+            let total = 0; let msg = `🛍️ *NUEVO PEDIDO - #${res.idPedido}*\n\n`;
+            carrito.forEach(i => { total += i.precio * i.qty; msg += `▪️ ${i.nombre}\n   ${i.qty} x RD$ ${Number(i.precio).toLocaleString()}\n\n`; });
+            msg += `💰 *TOTAL: RD$ ${total.toLocaleString()}*\n\n📍 _Por favor envíe su ubicación._`;
+            window.open(`https://wa.me/${dbConfig.WhatsApp}?text=${encodeURIComponent(msg)}`, "_blank");
+            carrito = []; localStorage.setItem('nexus_cart', "[]"); location.reload();
+        } else { alert("Error."); btn.disabled = false; }
+    }
+    window.onload = cargarTienda;
+</script>
+</body>
+</html>

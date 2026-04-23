@@ -1,0 +1,119 @@
+/* NEXUS PRO V4.1 - Design System
+   Arquitectura Modular de Estilos
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+:root {
+    /* Colores por defecto (Tema Emerald) */
+    --primary: #10b981;
+    --primary-light: #d1fae5;
+    --primary-dark: #059669;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --white: #ffffff;
+}
+
+/* --- DICCIONARIO DE TEMAS --- */
+body.theme-emerald {
+    --primary: #10b981;
+    --primary-light: #d1fae5;
+    --primary-dark: #059669;
+}
+
+body.theme-midnight {
+    --primary: #1e293b;
+    --primary-light: #e2e8f0;
+    --primary-dark: #0f172a;
+}
+
+body.theme-sunset {
+    --primary: #f97316;
+    --primary-light: #ffedd5;
+    --primary-dark: #ea580c;
+}
+
+/* --- ESTILOS BASE --- */
+body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- COMPONENTES REUTILIZABLES --- */
+
+/* Botón Maestro */
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: scale(0.96);
+}
+
+/* Tarjetas (Cards) */
+.app-card {
+    background: var(--white);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Modales */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    display: none; /* Se activa con .flex vía JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.modal-content {
+    background: var(--white);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 3rem;
+    padding: 2rem;
+    animation: slideUp 0.4s ease-out;
+}
+
+/* --- ANIMACIONES --- */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- UTILIDADES --- */
+.text-primary { color: var(--primary); }
+.bg-primary-light { background-color: var(--primary-light); }
+
+/* Inputs Estilizados */
+input, select {
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+    background-color: var(--white) !important;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
