@@ -1,35 +1,38 @@
-// config.js - NEXUS PRO V4.1
-const NEXUS_CONFIG = {
-    // 1. URL DE TU MOTOR MAESTRO (Tu URL de Apps Script)
-    API_URL: "https://script.google.com/macros/s/AKfycbxXELd_IB-sQNUPEJCwlV9YY9j74tmltOL1vR924NYGjEeFArPWmTIC4eLlMeNlUz2ZQA/exec", 
+/**
+ * NEXUS CORE V4.1 - El Cerebro Lógico
+ */
+const NexusCore = {
     
-    // 2. ID DE TU HOJA DE CÁLCULO (Sacado de tu link)
-    shopId: "1eRwI9Q66yZ1eKfszZHY4Q905PqQQ3vGTq7jS7KTLNFA",
-
-    // 3. RECUPERADORES DE DATOS
-    getShopId: function() { 
-        return this.shopId; // Ya no lo busca en el navegador, usa el de arriba fijo
-    },
-    getPin: () => localStorage.getItem('nexus_pin') || "1234",
-
-    // 4. FUNCIÓN DE COMUNICACIÓN UNIVERSAL
-    async call(action, data = {}) {
-        const payload = {
-            action: action,
-            shopId: this.getShopId(),
-            pin: this.getPin(),
-            data: data
-        };
-
+    async ejecutar(accion, datos = {}) {
         try {
-            const response = await fetch(this.API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            return await response.json();
+            const resultado = await NEXUS_CONFIG.call(accion, datos);
+
+            if (!resultado.success) {
+                console.error("Error en Motor Maestro:", resultado.message);
+                return { success: false, message: resultado.message };
+            }
+
+            return resultado;
+
         } catch (error) {
-            console.error("Error en conexión:", error);
-            return { success: false, message: "Error al conectar con el Motor Maestro." };
+            console.error("Error crítico de conexión:", error);
+            return { success: false, message: "No se pudo conectar con el Motor Maestro." };
         }
+    },
+
+    // Convierte imágenes para subirlas si es necesario
+    archivoABase64: (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    }),
+
+    // Formatea los precios a moneda dominicana
+    formatearRD: (monto) => {
+        return new Intl.NumberFormat('es-DO', {
+            style: 'currency',
+            currency: 'DOP',
+        }).format(monto);
     }
 };
