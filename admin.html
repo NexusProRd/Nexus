@@ -6,8 +6,8 @@
     <title>Nexus Pro - Panel de Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="config.js"></script>
-    <script src="nexus-core.js"></script>
+    <script src="config.js?v=3"></script>
+    <script src="nexus-core.js?v=3"></script>
 
     <style>
         body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
@@ -135,7 +135,7 @@
         </main>
     </div>
 
-    <div id="modalConfig" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 backdrop-blur-md">
+    <div id="modalConfig" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-[2000] backdrop-blur-md">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-black mb-6 text-slate-800">Ajustes del Sistema</h3>
             <div class="space-y-5">
@@ -212,16 +212,11 @@
     <button onclick="openAddModal()" id="btnAddFloat" class="fixed bottom-8 right-6 w-16 h-16 rounded-full shadow-2xl text-4xl text-white flex items-center justify-center border-4 border-white bg-custom-primary z-40 active:scale-90 transition-transform">+</button>
 
     <script>
-        // ==========================================
-        // 1. SISTEMA DE SEGURIDAD Y AUTO-TIMEOUT
-        // ==========================================
         let appData = { productos: [], pedidos: [], config: {}, resumen: {} };
         let currentPin = "1234";
         let dataPreloaded = false;
         let pollingInterval;
-        let pinAttempts = 0; // CONTADOR DE INTENTOS
-
-        // === ¡ATENCIÓN! CAMBIA ESTE NÚMERO POR TU WHATSAPP REAL DE SOPORTE ===
+        let pinAttempts = 0; 
         const telefonoSoporte = "18290000000"; 
         
         let inactivityTimer;
@@ -237,9 +232,7 @@
         window.addEventListener('keypress', resetInactivityTimer);
         window.addEventListener('touchstart', resetInactivityTimer);
 
-        // --- SOLUCIÓN INYECTADA PARA EL BOOTLOADER Y EL SHOP ID ---
         window.onload = async () => { 
-            // 1. Apagado de emergencia del bootloader.js
             setTimeout(() => {
                 const loader = document.getElementById("nexusBootloader");
                 if (loader) {
@@ -248,8 +241,7 @@
                 }
             }, 500);
 
-            // 2. Extraer ID directamente de config.js
-            const shopId = NEXUS_CONFIG.getShopId(); 
+            const shopId = NEXUS_CONFIG.getShopId();
 
             if(shopId) {
                 document.getElementById('pinLoader').classList.remove('hidden');
@@ -275,10 +267,11 @@
                         }
                     } else { throw new Error("ID Inválido"); }
                 } catch(e) {
-                    alert("Error conectando con la tienda. Verifica tu enlace en Configuración.");
+                    document.getElementById('loginSection').style.display = 'none';
                     toggleModal('modalConfig', true);
                 }
             } else {
+                document.getElementById('loginSection').style.display = 'none';
                 toggleModal('modalConfig', true);
             }
         }
@@ -303,7 +296,6 @@
                         pinInput.classList.add('opacity-50');
                         errorMsg.innerText = "Demasiados intentos. Tu panel ha sido bloqueado temporalmente.";
                         
-                        // Mostramos el botón de soporte de WhatsApp
                         supportBtn.href = `https://wa.me/${telefonoSoporte}?text=${encodeURIComponent("Hola, necesito asistencia. He bloqueado mi panel de Nexus Pro intentando ingresar el PIN.")}`;
                         supportBtn.classList.remove("hidden");
                         supportBtn.classList.add("inline-block");
@@ -324,9 +316,6 @@
             location.reload(); 
         }
 
-        // ==========================================
-        // 2. INICIO CON DATOS PRE-CARGADOS
-        // ==========================================
         let selectedColor = "#10b981";
         let wizSelectedColor = "#10b981";
         let currentTab = 'productos';
@@ -349,9 +338,6 @@
             pollingInterval = setInterval(syncOrdersSilently, 5000);
         }
 
-        // ==========================================
-        // 3. WIZARD Y FACTORY RESET
-        // ==========================================
         function selectWizTheme(color) {
             wizSelectedColor = color;
             document.querySelectorAll("#wizThemeSelector .theme-card").forEach(c => {
@@ -400,13 +386,9 @@
             }
         }
 
-        // ==========================================
-        // 4. CONFIGURACIÓN DEL SISTEMA
-        // ==========================================
         function applyConfig() {
             const cfg = appData.config || {};
             
-            // --- ACTUALIZADO PARA LEER DESDE CONFIG ---
             document.getElementById("cfgSheetId").value = NEXUS_CONFIG.getShopId() || "";
             document.getElementById("cfgPin").value = currentPin; 
             
@@ -471,9 +453,6 @@
             }
         }
 
-        // ==========================================
-        // 5. POLLING SILENCIOSO
-        // ==========================================
         async function syncOrdersSilently() {
             try {
                 const res = await NexusCore.ejecutar('getOrdersOnly');
@@ -489,9 +468,6 @@
             } catch(e) {}
         }
 
-        // ==========================================
-        // 6. RENDER DE PRODUCTOS E INVENTARIO
-        // ==========================================
         function applyFilters() {
             const term = document.getElementById("searchInput").value.toLowerCase();
             const status = document.getElementById("statusFilter").value;
@@ -517,16 +493,42 @@
                 </div>`).join("");
         }
 
+        // ==========================================
+        // LA FUNCIÓN ACTUALIZADA Y BLINDADA
+        // ==========================================
         async function processProduct() {
-            const btn = document.getElementById("btnSave"); btn.disabled = true; btn.innerText = "SUBIENDO...";
-            const file = document.getElementById("fileInput").files[0]; const id = document.getElementById("editId").value;
-            let base64 = null; if(file) base64 = await NexusCore.archivoABase64(file);
+            const btn = document.getElementById("btnSave"); 
+            btn.disabled = true; 
+            btn.innerText = "SUBIENDO...";
+            
+            const file = document.getElementById("fileInput").files[0]; 
+            const id = document.getElementById("editId").value;
+            
+            let base64Puro = null; 
+            let mime = null;
+
+            if(file) {
+                const base64Raw = await NexusCore.archivoABase64(file);
+                // ESTA ES LA CLAVE: Separamos la cabecera del contenido puro para no ahogar a Google Drive
+                if (base64Raw.includes(",")) {
+                    base64Puro = base64Raw.split(',')[1];
+                    mime = base64Raw.split(';')[0].split(':')[1];
+                }
+            }
 
             const payload = {
-                id: id, nombre: document.getElementById("pNombre").value, categoria: document.getElementById("pCategoria").value,
-                precio: document.getElementById("pPrecio").value, costo: document.getElementById("pCosto").value,
-                stock: document.getElementById("pStock").value, estado: document.getElementById("pEstado").value,
-                detalle: document.getElementById("pDetalle").value, foto: base64, fileName: file ? file.name : ""
+                id: id, 
+                nombre: document.getElementById("pNombre").value, 
+                categoria: document.getElementById("pCategoria").value,
+                precio: document.getElementById("pPrecio").value, 
+                costo: document.getElementById("pCosto").value,
+                stock: document.getElementById("pStock").value, 
+                estado: document.getElementById("pEstado").value,
+                detalle: document.getElementById("pDetalle").value, 
+                foto: base64Puro, // Solo los datos limpios
+                mimeType: mime,   // Ej: image/jpeg
+                fileName: file ? file.name : "",
+                imagenAnterior: document.getElementById("preview").src // Mantiene la url vieja si no subes foto
             };
 
             const res = await NexusCore.ejecutar('saveProduct', payload);
@@ -535,25 +537,24 @@
                 document.getElementById("successMessage").innerText = id ? "Producto actualizado." : "Nuevo producto guardado.";
                 toggleModal("modalSuccess", true);
                 
-                // ACTUALIZACIÓN INSTANTÁNEA EN PANTALLA
                 const refreshData = await NexusCore.ejecutar('getInitData');
                 if (refreshData.success) {
                     appData = refreshData;
                     applyFilters(); 
                 }
-            } else { alert("Error al guardar: " + res.message); }
-            btn.disabled = false; btn.innerText = "Guardar Producto";
+            } else { 
+                alert("Error al guardar: " + res.message); 
+            }
+            
+            btn.disabled = false; 
+            btn.innerText = "Guardar Producto";
         }
 
-        // ==========================================
-        // 7. GESTOR DE PEDIDOS (DISEÑO MEJORADO)
-        // ==========================================
         function renderPedidos() {
             const container = document.getElementById("listaPedidos");
             if(!appData.pedidos || appData.pedidos.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-3xl">No hay pedidos registrados</div>`; return; }
 
             container.innerHTML = appData.pedidos.map((p) => {
-                // Colores limpios
                 let statusClass = "bg-yellow-50 text-yellow-600"; 
                 let borderClass = "border-l-yellow-400";
                 
@@ -609,9 +610,6 @@
             }
         }
 
-        // ==========================================
-        // 8. NAVEGACIÓN Y MODALES
-        // ==========================================
         async function switchTab(tab) {
             currentTab = tab;
             document.getElementById("view-productos").classList.toggle("hidden", tab !== 'productos'); document.getElementById("view-pedidos").classList.toggle("hidden", tab !== 'pedidos');
