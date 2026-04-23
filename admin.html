@@ -131,12 +131,12 @@
         </nav>
 
         <main id="view-productos" class="p-4 sm:p-5">
-            <div class="mb-4 flex gap-2">
-                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="flex-1 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
-                <select id="statusFilter" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-2xl px-3 sm:px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500">
-                    <option value="Todos">Todos</option>
-                    <option value="Publicado">Publicado</option>
-                    <option value="Archivado">Archivado</option>
+            <div class="mb-5 flex flex-col gap-3">
+                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
+                <select id="statusFilter" onchange="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500 appearance-none">
+                    <option value="Todos">📦 Mostrar Todos los Productos</option>
+                    <option value="Publicado">✅ Solo Publicados</option>
+                    <option value="Archivado">📁 Solo Archivados</option>
                 </select>
             </div>
             <div id="listaProductos" class="space-y-3"></div>
