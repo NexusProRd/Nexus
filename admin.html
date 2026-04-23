@@ -237,8 +237,20 @@
         window.addEventListener('keypress', resetInactivityTimer);
         window.addEventListener('touchstart', resetInactivityTimer);
 
+        // --- SOLUCIÓN INYECTADA PARA EL BOOTLOADER Y EL SHOP ID ---
         window.onload = async () => { 
-            const shopId = localStorage.getItem("nexus_shop_id");
+            // 1. Apagado de emergencia del bootloader.js
+            setTimeout(() => {
+                const loader = document.getElementById("nexusBootloader");
+                if (loader) {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.remove(), 400);
+                }
+            }, 500);
+
+            // 2. Extraer ID directamente de config.js
+            const shopId = NEXUS_CONFIG.getShopId(); 
+
             if(shopId) {
                 document.getElementById('pinLoader').classList.remove('hidden');
                 document.getElementById('loginSubtitle').innerHTML = `<span class="loader" id="pinLoader"></span> Conectando motor...`;
@@ -394,7 +406,8 @@
         function applyConfig() {
             const cfg = appData.config || {};
             
-            document.getElementById("cfgSheetId").value = localStorage.getItem("nexus_shop_id") || "";
+            // --- ACTUALIZADO PARA LEER DESDE CONFIG ---
+            document.getElementById("cfgSheetId").value = NEXUS_CONFIG.getShopId() || "";
             document.getElementById("cfgPin").value = currentPin; 
             
             document.getElementById("displayTienda").innerText = cfg.Nombre_Tienda || "Mi Tienda";
