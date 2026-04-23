@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Pro - Panel de Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="config.js?v=2"></script>
-    <script src="nexus-core.js?v=2"></script>
+    
+    <script src="config.js?v=4"></script>
+    <script src="nexus-core.js?v=4"></script>
 
     <style>
         body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
@@ -94,31 +95,19 @@
     </div>
 
     <div id="adminContent">
-        <header id="headerMain" class="px-4 py-5 sm:p-6 text-white rounded-b-[2rem] shadow-xl bg-custom-primary">
-            <div class="flex justify-between items-center mb-5">
-                <div>
-                    <p class="text-[9px] uppercase font-bold opacity-80 tracking-widest mb-0.5">Administrador</p>
-                    <h1 id="displayTienda" class="text-xl font-black tracking-tight italic leading-none">Mi Tienda</h1>
-                </div>
+        <header id="headerMain" class="p-6 text-white rounded-b-[2.5rem] shadow-xl bg-custom-primary">
+            <div class="flex justify-between items-center mb-6">
+                <h1 id="displayTienda" class="text-xl font-black tracking-tight italic">Mi Tienda</h1>
                 <div class="flex gap-2">
-                    <button onclick="toggleModal('modalConfig', true)" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md hover:bg-white/30 transition">⚙️</button>
-                    <button onclick="logout()" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md hover:bg-red-500/30 transition">🚪</button>
+                    <button onclick="toggleModal('modalConfig', true)" class="bg-white/20 p-2 rounded-full backdrop-blur-md hover:bg-white/30 transition">⚙️</button>
+                    <button onclick="logout()" class="bg-white/20 p-2 rounded-full backdrop-blur-md hover:bg-red-500/30 transition">🚪</button>
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-1 sm:gap-2 text-center bg-black/10 p-3 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] backdrop-blur-md border border-white/10 shadow-inner overflow-hidden">
-                <div class="flex flex-col justify-center">
-                    <p class="text-[8px] sm:text-[9px] uppercase opacity-90 font-bold mb-0.5 tracking-wider">Inversión</p>
-                    <p id="dashInversion" class="font-black text-[10px] sm:text-xs whitespace-nowrap truncate">RD$ 0</p>
-                </div>
-                <div class="flex flex-col justify-center border-x border-white/10">
-                    <p class="text-[8px] sm:text-[9px] uppercase font-black mb-0.5 text-yellow-300 tracking-wider">Ganancia</p>
-                    <p id="dashGanancia" class="font-black text-[10px] sm:text-xs text-yellow-300 whitespace-nowrap truncate">RD$ 0</p>
-                </div>
-                <div class="flex flex-col justify-center">
-                    <p class="text-[8px] sm:text-[9px] uppercase opacity-90 font-bold mb-0.5 tracking-wider">Stock</p>
-                    <p id="dashStock" class="font-black text-[10px] sm:text-xs">0</p>
-                </div>
+            <div class="grid grid-cols-3 gap-2 text-center bg-black/10 p-5 rounded-[2rem] backdrop-blur-md border border-white/10 shadow-inner">
+                <div><p class="text-[9px] uppercase opacity-90 font-bold mb-1">Inversión</p><p id="dashInversion" class="font-bold text-xs">RD$ 0</p></div>
+                <div><p class="text-[9px] uppercase font-black mb-1 text-yellow-300">Ganancia</p><p id="dashGanancia" class="font-bold text-xs text-yellow-300">RD$ 0</p></div>
+                <div><p class="text-[9px] uppercase opacity-90 font-bold mb-1">Stock</p><p id="dashStock" class="font-bold text-xs">0</p></div>
             </div>
         </header>
 
@@ -130,24 +119,24 @@
             </button>
         </nav>
 
-        <main id="view-productos" class="p-4 sm:p-5">
-            <div class="mb-5 flex flex-col gap-3">
-                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
-                <select id="statusFilter" onchange="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500 appearance-none">
-                    <option value="Todos">📦 Mostrar Todos los Productos</option>
-                    <option value="Publicado">✅ Solo Publicados</option>
-                    <option value="Archivado">📁 Solo Archivados</option>
+        <main id="view-productos" class="p-5">
+            <div class="mb-4 flex gap-2">
+                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="flex-1 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
+                <select id="statusFilter" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500">
+                    <option value="Todos">Todos</option>
+                    <option value="Publicado">Publicado</option>
+                    <option value="Archivado">Archivado</option>
                 </select>
             </div>
             <div id="listaProductos" class="space-y-3"></div>
         </main>
 
-        <main id="view-pedidos" class="p-4 sm:p-5 hidden">
+        <main id="view-pedidos" class="p-5 hidden">
             <div id="listaPedidos" class="space-y-5"></div>
         </main>
     </div>
 
-    <div id="modalConfig" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 backdrop-blur-md">
+    <div id="modalConfig" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-[2000] backdrop-blur-md">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-black mb-6 text-slate-800">Ajustes del Sistema</h3>
             <div class="space-y-5">
@@ -224,16 +213,11 @@
     <button onclick="openAddModal()" id="btnAddFloat" class="fixed bottom-8 right-6 w-16 h-16 rounded-full shadow-2xl text-4xl text-white flex items-center justify-center border-4 border-white bg-custom-primary z-40 active:scale-90 transition-transform">+</button>
 
     <script>
-        // ==========================================
-        // 1. SISTEMA DE SEGURIDAD Y AUTO-TIMEOUT
-        // ==========================================
         let appData = { productos: [], pedidos: [], config: {}, resumen: {} };
         let currentPin = "1234";
         let dataPreloaded = false;
         let pollingInterval;
-        let pinAttempts = 0; // CONTADOR DE INTENTOS
-
-        // === ¡ATENCIÓN! CAMBIA ESTE NÚMERO POR TU WHATSAPP REAL DE SOPORTE ===
+        let pinAttempts = 0; 
         const telefonoSoporte = "18290000000"; 
         
         let inactivityTimer;
@@ -250,7 +234,16 @@
         window.addEventListener('touchstart', resetInactivityTimer);
 
         window.onload = async () => { 
-            const shopId = localStorage.getItem("nexus_shop_id");
+            setTimeout(() => {
+                const loader = document.getElementById("nexusBootloader");
+                if (loader) {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.remove(), 400);
+                }
+            }, 500);
+
+            const shopId = NEXUS_CONFIG.getShopId();
+
             if(shopId) {
                 document.getElementById('pinLoader').classList.remove('hidden');
                 document.getElementById('loginSubtitle').innerHTML = `<span class="loader" id="pinLoader"></span> Conectando motor...`;
@@ -275,10 +268,11 @@
                         }
                     } else { throw new Error("ID Inválido"); }
                 } catch(e) {
-                    alert("Error conectando con la tienda. Verifica tu enlace en Configuración.");
+                    document.getElementById('loginSection').style.display = 'none';
                     toggleModal('modalConfig', true);
                 }
             } else {
+                document.getElementById('loginSection').style.display = 'none';
                 toggleModal('modalConfig', true);
             }
         }
@@ -303,7 +297,6 @@
                         pinInput.classList.add('opacity-50');
                         errorMsg.innerText = "Demasiados intentos. Tu panel ha sido bloqueado temporalmente.";
                         
-                        // Mostramos el botón de soporte de WhatsApp
                         supportBtn.href = `https://wa.me/${telefonoSoporte}?text=${encodeURIComponent("Hola, necesito asistencia. He bloqueado mi panel de Nexus Pro intentando ingresar el PIN.")}`;
                         supportBtn.classList.remove("hidden");
                         supportBtn.classList.add("inline-block");
@@ -324,9 +317,6 @@
             location.reload(); 
         }
 
-        // ==========================================
-        // 2. INICIO CON DATOS PRE-CARGADOS
-        // ==========================================
         let selectedColor = "#10b981";
         let wizSelectedColor = "#10b981";
         let currentTab = 'productos';
@@ -349,9 +339,6 @@
             pollingInterval = setInterval(syncOrdersSilently, 5000);
         }
 
-        // ==========================================
-        // 3. WIZARD Y FACTORY RESET
-        // ==========================================
         function selectWizTheme(color) {
             wizSelectedColor = color;
             document.querySelectorAll("#wizThemeSelector .theme-card").forEach(c => {
@@ -400,13 +387,10 @@
             }
         }
 
-        // ==========================================
-        // 4. CONFIGURACIÓN DEL SISTEMA
-        // ==========================================
         function applyConfig() {
             const cfg = appData.config || {};
             
-            document.getElementById("cfgSheetId").value = localStorage.getItem("nexus_shop_id") || "";
+            document.getElementById("cfgSheetId").value = NEXUS_CONFIG.getShopId() || "";
             document.getElementById("cfgPin").value = currentPin; 
             
             document.getElementById("displayTienda").innerText = cfg.Nombre_Tienda || "Mi Tienda";
@@ -470,9 +454,6 @@
             }
         }
 
-        // ==========================================
-        // 5. POLLING SILENCIOSO
-        // ==========================================
         async function syncOrdersSilently() {
             try {
                 const res = await NexusCore.ejecutar('getOrdersOnly');
@@ -488,9 +469,6 @@
             } catch(e) {}
         }
 
-        // ==========================================
-        // 6. RENDER DE PRODUCTOS E INVENTARIO
-        // ==========================================
         function applyFilters() {
             const term = document.getElementById("searchInput").value.toLowerCase();
             const status = document.getElementById("statusFilter").value;
@@ -516,16 +494,25 @@
                 </div>`).join("");
         }
 
+        // ==========================================
+        // LÓGICA DE IMAGEN RESTAURADA PARA EVITAR ERROR NEWBLOB
+        // ==========================================
         async function processProduct() {
             const btn = document.getElementById("btnSave"); btn.disabled = true; btn.innerText = "SUBIENDO...";
             const file = document.getElementById("fileInput").files[0]; const id = document.getElementById("editId").value;
             let base64 = null; if(file) base64 = await NexusCore.archivoABase64(file);
 
             const payload = {
-                id: id, nombre: document.getElementById("pNombre").value, categoria: document.getElementById("pCategoria").value,
-                precio: document.getElementById("pPrecio").value, costo: document.getElementById("pCosto").value,
-                stock: document.getElementById("pStock").value, estado: document.getElementById("pEstado").value,
-                detalle: document.getElementById("pDetalle").value, foto: base64, fileName: file ? file.name : ""
+                id: id, 
+                nombre: document.getElementById("pNombre").value, 
+                categoria: document.getElementById("pCategoria").value,
+                precio: document.getElementById("pPrecio").value, 
+                costo: document.getElementById("pCosto").value,
+                stock: document.getElementById("pStock").value, 
+                estado: document.getElementById("pEstado").value,
+                detalle: document.getElementById("pDetalle").value, 
+                foto: base64, 
+                fileName: file ? file.name : ""
             };
 
             const res = await NexusCore.ejecutar('saveProduct', payload);
@@ -544,15 +531,11 @@
             btn.disabled = false; btn.innerText = "Guardar Producto";
         }
 
-        // ==========================================
-        // 7. GESTOR DE PEDIDOS (DISEÑO MEJORADO)
-        // ==========================================
         function renderPedidos() {
             const container = document.getElementById("listaPedidos");
             if(!appData.pedidos || appData.pedidos.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-3xl">No hay pedidos registrados</div>`; return; }
 
             container.innerHTML = appData.pedidos.map((p) => {
-                // Colores limpios
                 let statusClass = "bg-yellow-50 text-yellow-600"; 
                 let borderClass = "border-l-yellow-400";
                 
@@ -608,9 +591,6 @@
             }
         }
 
-        // ==========================================
-        // 8. NAVEGACIÓN Y MODALES
-        // ==========================================
         async function switchTab(tab) {
             currentTab = tab;
             document.getElementById("view-productos").classList.toggle("hidden", tab !== 'productos'); document.getElementById("view-pedidos").classList.toggle("hidden", tab !== 'pedidos');
