@@ -6,8 +6,9 @@
     <title>Nexus Pro - Panel de Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="config.js?v=3"></script>
-    <script src="nexus-core.js?v=3"></script>
+    
+    <script src="config.js?v=4"></script>
+    <script src="nexus-core.js?v=4"></script>
 
     <style>
         body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
@@ -494,27 +495,12 @@
         }
 
         // ==========================================
-        // LA FUNCIÓN ACTUALIZADA Y BLINDADA
+        // LÓGICA DE IMAGEN RESTAURADA PARA EVITAR ERROR NEWBLOB
         // ==========================================
         async function processProduct() {
-            const btn = document.getElementById("btnSave"); 
-            btn.disabled = true; 
-            btn.innerText = "SUBIENDO...";
-            
-            const file = document.getElementById("fileInput").files[0]; 
-            const id = document.getElementById("editId").value;
-            
-            let base64Puro = null; 
-            let mime = null;
-
-            if(file) {
-                const base64Raw = await NexusCore.archivoABase64(file);
-                // ESTA ES LA CLAVE: Separamos la cabecera del contenido puro para no ahogar a Google Drive
-                if (base64Raw.includes(",")) {
-                    base64Puro = base64Raw.split(',')[1];
-                    mime = base64Raw.split(';')[0].split(':')[1];
-                }
-            }
+            const btn = document.getElementById("btnSave"); btn.disabled = true; btn.innerText = "SUBIENDO...";
+            const file = document.getElementById("fileInput").files[0]; const id = document.getElementById("editId").value;
+            let base64 = null; if(file) base64 = await NexusCore.archivoABase64(file);
 
             const payload = {
                 id: id, 
@@ -525,10 +511,8 @@
                 stock: document.getElementById("pStock").value, 
                 estado: document.getElementById("pEstado").value,
                 detalle: document.getElementById("pDetalle").value, 
-                foto: base64Puro, // Solo los datos limpios
-                mimeType: mime,   // Ej: image/jpeg
-                fileName: file ? file.name : "",
-                imagenAnterior: document.getElementById("preview").src // Mantiene la url vieja si no subes foto
+                foto: base64, 
+                fileName: file ? file.name : ""
             };
 
             const res = await NexusCore.ejecutar('saveProduct', payload);
@@ -537,17 +521,14 @@
                 document.getElementById("successMessage").innerText = id ? "Producto actualizado." : "Nuevo producto guardado.";
                 toggleModal("modalSuccess", true);
                 
+                // ACTUALIZACIÓN INSTANTÁNEA EN PANTALLA
                 const refreshData = await NexusCore.ejecutar('getInitData');
                 if (refreshData.success) {
                     appData = refreshData;
                     applyFilters(); 
                 }
-            } else { 
-                alert("Error al guardar: " + res.message); 
-            }
-            
-            btn.disabled = false; 
-            btn.innerText = "Guardar Producto";
+            } else { alert("Error al guardar: " + res.message); }
+            btn.disabled = false; btn.innerText = "Guardar Producto";
         }
 
         function renderPedidos() {
