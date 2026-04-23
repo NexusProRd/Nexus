@@ -1,57 +1,35 @@
-/**
- * NEXUS CORE V4.1 - El Cerebro Lógico
- * Este archivo centraliza la comunicación entre tu web y el Motor Maestro.
- */
-
-const NexusCore = {
+// config.js - NEXUS PRO V4.1
+const NEXUS_CONFIG = {
+    // 1. URL DE TU MOTOR MAESTRO (Tu URL de Apps Script)
+    API_URL: "https://script.google.com/macros/s/AKfycbxXELd_IB-sQNUPEJCwlV9YY9j74tmltOL1vR924NYGjEeFArPWmTIC4eLlMeNlUz2ZQA/exec", 
     
-    /**
-     * Envía una orden al Motor Maestro (Apps Script)
-     * @param {string} accion - Ejemplo: 'uploadPhoto', 'getProducts', 'confirmOrder'
-     * @param {object} datos - Los datos que necesita la acción
-     */
-    async ejecutar(accion, datos = {}) {
-        // Usamos la función call de NEXUS_CONFIG para centralizar la seguridad
-        try {
-            const resultado = await NEXUS_CONFIG.call(accion, datos);
+    // 2. ID DE TU HOJA DE CÁLCULO (Sacado de tu link)
+    shopId: "1eRwI9Q66yZ1eKfszZHY4Q905PqQQ3vGTq7jS7KTLNFA",
 
-            if (!resultado.success) {
-                console.error("Error en Motor Maestro:", resultado.message);
-                return { success: false, message: resultado.message };
-            }
-
-            return resultado;
-
-        } catch (error) {
-            console.error("Error crítico de conexión:", error);
-            return { success: false, message: "No se pudo conectar con el Motor Maestro." };
-        }
+    // 3. RECUPERADORES DE DATOS
+    getShopId: function() { 
+        return this.shopId; // Ya no lo busca en el navegador, usa el de arriba fijo
     },
+    getPin: () => localStorage.getItem('nexus_pin') || "1234",
 
-    /**
-     * Convierte un archivo de imagen (File) a una cadena Base64
-     * Vital para enviar fotos a Google Drive por el "túnel" de datos.
-     */
-    archivoABase64: (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    }),
+    // 4. FUNCIÓN DE COMUNICACIÓN UNIVERSAL
+    async call(action, data = {}) {
+        const payload = {
+            action: action,
+            shopId: this.getShopId(),
+            pin: this.getPin(),
+            data: data
+        };
 
-    /**
-     * Aplica el tema visual de forma dinámica
-     * Se usa tanto en Admin como en Index.
-     */
-    aplicarTema: (tema) => {
-        const temasValidos = ['emerald', 'midnight', 'sunset'];
-        const claseTema = temasValidos.includes(tema) ? `theme-${tema}` : 'theme-emerald';
-        
-        // Limpiamos temas anteriores y aplicamos el nuevo
-        document.body.classList.remove('theme-emerald', 'theme-midnight', 'theme-sunset');
-        document.body.classList.add(claseTema);
-        
-        // Guardamos preferencia en local
-        localStorage.setItem('nexus_theme', tema);
+        try {
+            const response = await fetch(this.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Error en conexión:", error);
+            return { success: false, message: "Error al conectar con el Motor Maestro." };
+        }
     }
 };
