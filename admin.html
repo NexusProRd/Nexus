@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Pro - Panel de Control</title>
+    <title>Cargando Panel...</title>
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="config.js?v=2.0.0"></script>
-    <script src="nexus-core.js?v=2.0.0"></script>
+    <script src="config.js?v=2.1.0"></script>
+    <script src="nexus-core.js?v=2.1.0"></script>
 
     <style>
         body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
@@ -25,27 +26,69 @@
         
         @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .animate-scale-in { animation: scaleIn 0.25s ease-out; }
-        #adminContent { display: none; }
         
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: -5px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ==========================================
+           MODO ESCRITORIO (DASHBOARD PROFESIONAL)
+           ========================================== */
+        @media (min-width: 1024px) {
+            body { background: #f1f5f9; }
+            #adminContent { display: grid !important; grid-template-columns: 240px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; max-width: 1400px; margin: 0 auto; background: white; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
+            #headerMain { grid-column: 2 / 3; grid-row: 1 / 2; border-radius: 0 0 2rem 2rem; margin: 0 30px; box-shadow: 0 10px 30px rgba(0,168,132,0.15); }
+            nav { grid-column: 1 / 2; grid-row: 1 / 3; flex-direction: column; justify-content: flex-start; gap: 10px; padding: 40px 20px; background: white; border-right: 1px solid #e2e8f0; border-bottom: none; height: 100vh; position: sticky; top: 0; z-index: 50; }
+            nav::before { content: "NEXUS PRO"; display: block; font-size: 20px; font-weight: 900; font-style: italic; color: #0f172a; text-align: center; margin-bottom: 40px; letter-spacing: -0.5px; }
+            nav button { padding: 18px 20px; text-align: left; border-bottom: none !important; border-radius: 1rem; width: 100%; transition: 0.2s; font-size: 13px; }
+            .tab-active { background: var(--primary); color: white !important; box-shadow: 0 10px 20px rgba(0,168,132,0.2); }
+            #badge-pedidos { top: 50%; right: 20px; transform: translateY(-50%); }
+            main { grid-column: 2 / 3; grid-row: 2 / 3; padding: 40px 30px; }
+            #listaProductos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+            #listaPedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; align-items: start; }
+            #btnAddFloat { bottom: 40px; right: 40px; width: 70px; height: 70px; font-size: 32px; }
+            #orderFilters { flex-wrap: wrap; justify-content: flex-start; }
+            .app-card { border-radius: 1.2rem; }
+        }
     </style>
 </head>
 <body class="pb-24">
 
+    <div id="pwaBanner" class="fixed top-0 left-0 right-0 bg-slate-900 text-white p-4 z-[5000] hidden animate-scale-in border-b border-white/10">
+        <div class="flex items-center justify-between max-w-4xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="text-2xl">📱</div>
+                <div>
+                    <p class="text-[11px] font-black uppercase tracking-tight">Instalar Panel Nexus</p>
+                    <p class="text-[9px] text-slate-400 font-bold">Acceso directo en tu pantalla.</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="dismissPWA()" class="px-4 py-2 text-[10px] font-black uppercase text-slate-400">Ahora no</button>
+                <button onclick="installPWA()" class="px-6 py-2 bg-emerald-500 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-emerald-500/20">Instalar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginSection" class="fixed inset-0 bg-slate-900 z-[1000] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl text-center animate-scale-in">
             <h2 class="text-3xl font-black text-slate-800 mb-1 italic">NEXUS <span class="text-emerald-500 font-black">PRO</span></h2>
-            <p id="loginSubtitle" class="text-slate-400 text-[10px] mb-8 font-bold uppercase tracking-widest italic flex justify-center items-center gap-2"><span class="loader" id="pinLoader"></span> Conectando...</p>
-            <div class="mb-8 relative">
-                <input type="password" id="pinInput" maxlength="4" placeholder="••••" disabled
-                       class="w-full bg-slate-100 p-6 rounded-2xl text-center text-3xl font-black tracking-[1rem] outline-none border-4 border-transparent focus:border-emerald-500 transition-all opacity-50 disabled:bg-slate-200">
-                <div id="loginErrorContainer" class="mt-4 hidden">
-                    <p id="loginError" class="text-red-500 text-[10px] font-bold uppercase"></p>
-                    <a id="supportBtn" href="#" target="_blank" class="hidden mt-3 bg-slate-900 text-white text-[10px] font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 transition-colors">Contactar Soporte Técnico</a>
+            <p id="loginSubtitle" class="text-slate-400 text-[10px] mb-8 font-bold uppercase tracking-widest italic flex justify-center items-center gap-2">
+                <span class="loader" id="pinLoader"></span> Iniciando Motor...
+            </p>
+            
+            <div id="pinContainer" style="display: none;">
+                <div class="mb-8 relative">
+                    <input type="password" id="pinInput" maxlength="4" placeholder="••••" disabled
+                           class="w-full bg-slate-100 p-6 rounded-2xl text-center text-3xl font-black tracking-[1rem] outline-none border-4 border-transparent focus:border-emerald-500 transition-all opacity-50 disabled:bg-slate-200">
+                    <div id="loginErrorContainer" class="mt-4 hidden">
+                        <p id="loginError" class="text-red-500 text-[10px] font-bold uppercase"></p>
+                    </div>
                 </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Introduce tu PIN de seguridad</p>
             </div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase" id="loginHint">Introduce tu PIN de seguridad</p>
         </div>
     </div>
 
@@ -56,94 +99,73 @@
             
             <div class="space-y-4">
                 <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700">
-                    <label class="text-[10px] font-black text-emerald-400 uppercase ml-1 block mb-3 tracking-widest">Crea tu PIN de Acceso (4 dígitos)</label>
+                    <label class="text-[10px] font-black text-emerald-400 uppercase block mb-3">PIN de Acceso (4 dígitos)</label>
                     <div class="space-y-3">
-                        <input id="wizPin" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl outline-none text-xl text-center text-white font-black tracking-[0.5rem] border border-slate-600 focus:border-emerald-400 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-slate-500" placeholder="Ingresa 4 dígitos">
-                        <input id="wizPinConfirm" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl outline-none text-xl text-center text-white font-black tracking-[0.5rem] border border-slate-600 focus:border-emerald-400 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-slate-500" placeholder="Confirma el PIN">
-                    </div>
-                    <p class="text-[9px] text-slate-400 text-center mt-3 font-bold uppercase">No lo olvides. Te lo pediremos al entrar.</p>
-                </div>
-
-                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Nombre de la Tienda</label>
-                <input id="wizNombre" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-bold border border-slate-100" placeholder="Ej: Repuestos El Primo"></div>
-                
-                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2 text-emerald-600">WhatsApp Pedidos</label>
-                <input id="wizWA" type="text" class="w-full bg-emerald-50 p-4 rounded-2xl outline-none text-sm border border-emerald-100 font-black text-emerald-700" placeholder="Ej: 18290000000"></div>
-
-                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Categorías (Comas)</label>
-                <input id="wizCategorias" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm border border-slate-100" placeholder="Ej: Tenis, Polos, Pantalones"></div>
-
-                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Eslogan Corto</label>
-                <input id="wizEslogan" type="text" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm border border-slate-100" placeholder="Ej: Calidad y buen precio"></div>
-                
-                <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Breve Reseña</label>
-                <textarea id="wizSobre" class="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm h-20 border border-slate-100 resize-none" placeholder="Somos una tienda dedicada a..."></textarea></div>
-                
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 block mb-2">Paleta de Colores</label>
-                    <div class="grid grid-cols-2 gap-2" id="wizThemeSelector">
-                        <div onclick="selectWizTheme('#10b981')" class="theme-card active p-3 rounded-xl bg-emerald-50 text-[10px] font-bold text-emerald-700 text-center" data-color="#10b981">🌿 Emerald</div>
-                        <div onclick="selectWizTheme('#0f172a')" class="theme-card p-3 rounded-xl bg-slate-900 text-[10px] font-bold text-slate-200 text-center" data-color="#0f172a">🌑 Midnight</div>
-                        <div onclick="selectWizTheme('#6366f1')" class="theme-card p-3 rounded-xl bg-indigo-50 text-[10px] font-bold text-indigo-700 text-center" data-color="#6366f1">💎 Royal Blue</div>
-                        <div onclick="selectWizTheme('#f43f5e')" class="theme-card p-3 rounded-xl bg-rose-50 text-[10px] font-bold text-rose-700 text-center" data-color="#f43f5e">🔥 Sunset</div>
+                        <input id="wizPin" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl text-white text-center font-black tracking-[0.5rem]" placeholder="0000">
+                        <input id="wizPinConfirm" type="password" maxlength="4" class="w-full bg-slate-800 p-4 rounded-xl text-white text-center font-black tracking-[0.5rem]" placeholder="0000">
                     </div>
                 </div>
-
-                <button onclick="saveWizard()" id="btnWizSave" class="w-full bg-emerald-500 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs mt-2">Crear Tienda</button>
+                <input id="wizNombre" type="text" class="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold" placeholder="Nombre de la Tienda">
+                <input id="wizWA" type="text" class="w-full bg-emerald-50 p-4 rounded-2xl text-sm font-black text-emerald-700" placeholder="WhatsApp (Ej: 18290000000)">
+                <input id="wizCategorias" type="text" class="w-full bg-slate-50 p-4 rounded-2xl text-sm" placeholder="Categorías (Tenis, Polos...)">
+                <input id="wizEslogan" type="text" class="w-full bg-slate-50 p-4 rounded-2xl text-sm" placeholder="Eslogan Corto">
+                <textarea id="wizSobre" class="w-full bg-slate-50 p-4 rounded-2xl text-sm h-20" placeholder="Somos una tienda dedicada a..."></textarea>
+                <button onclick="saveWizard()" id="btnWizSave" class="w-full bg-emerald-500 p-5 rounded-2xl font-black text-white uppercase text-xs">Crear Tienda</button>
             </div>
         </div>
     </div>
 
-    <div id="adminContent">
-        <header id="headerMain" class="px-4 py-5 sm:p-6 text-white rounded-b-[2rem] shadow-xl bg-custom-primary">
+    <div id="adminContent" style="display: none;">
+        <header id="headerMain" class="px-4 py-5 text-white rounded-b-[2rem] shadow-xl bg-custom-primary">
             <div class="flex justify-between items-center mb-5">
                 <div>
                     <p class="text-[9px] uppercase font-bold opacity-80 tracking-widest mb-0.5">Administrador</p>
-                    <h1 id="displayTienda" class="text-xl font-black tracking-tight italic leading-none">Mi Tienda</h1>
+                    <h1 id="displayTienda" class="text-xl font-black italic">Mi Tienda</h1>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="toggleModal('modalConfig', true)" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md hover:bg-white/30 transition">⚙️</button>
-                    <button onclick="logout()" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md hover:bg-red-500/30 transition">🚪</button>
+                    <button onclick="toggleModal('modalConfig', true)" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md">⚙️</button>
+                    <button onclick="logout()" class="bg-white/20 p-2.5 rounded-full backdrop-blur-md">🚪</button>
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-1 sm:gap-2 text-center bg-black/10 p-3 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] backdrop-blur-md border border-white/10 shadow-inner overflow-hidden">
-                <div class="flex flex-col justify-center">
-                    <p class="text-[8px] sm:text-[9px] uppercase opacity-90 font-bold mb-0.5 tracking-wider">Inversión</p>
-                    <p id="dashInversion" class="font-black text-[10px] sm:text-xs whitespace-nowrap truncate">RD$ 0</p>
-                </div>
-                <div class="flex flex-col justify-center border-x border-white/10">
-                    <p class="text-[8px] sm:text-[9px] uppercase font-black mb-0.5 text-yellow-300 tracking-wider">Ganancia</p>
-                    <p id="dashGanancia" class="font-black text-[10px] sm:text-xs text-yellow-300 whitespace-nowrap truncate">RD$ 0</p>
-                </div>
-                <div class="flex flex-col justify-center">
-                    <p class="text-[8px] sm:text-[9px] uppercase opacity-90 font-bold mb-0.5 tracking-wider">Stock</p>
-                    <p id="dashStock" class="font-black text-[10px] sm:text-xs">0</p>
-                </div>
+            <div class="grid grid-cols-3 gap-2 text-center bg-black/10 p-4 rounded-[1.5rem] backdrop-blur-md">
+                <div><p class="text-[8px] uppercase opacity-90 font-bold mb-0.5">Inversión</p><p id="dashInversion" class="font-black text-xs whitespace-nowrap">RD$ 0</p></div>
+                <div class="border-x border-white/10"><p class="text-[8px] uppercase font-black text-yellow-300 mb-0.5">Ganancia</p><p id="dashGanancia" class="font-black text-xs text-yellow-300">RD$ 0</p></div>
+                <div><p class="text-[8px] uppercase opacity-90 font-bold mb-0.5">Stock</p><p id="dashStock" class="font-black text-xs">0</p></div>
             </div>
         </header>
 
-        <nav class="flex justify-center gap-8 bg-white border-b sticky top-0 z-40 shadow-sm">
-            <button onclick="switchTab('productos')" id="tab-productos" class="p-4 font-black text-[11px] uppercase tracking-widest tab-active transition-colors">Inventario</button>
-            <button onclick="switchTab('pedidos')" id="tab-pedidos" class="relative p-4 font-black text-[11px] uppercase tracking-widest text-slate-400 transition-colors">
-                Pedidos
-                <span id="badge-pedidos" class="hidden absolute top-3 -right-2 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+        <nav class="flex justify-center gap-8 bg-white border-b sticky top-0 z-40">
+            <button onclick="switchTab('productos')" id="tab-productos" class="p-4 font-black text-[11px] uppercase tracking-widest tab-active">Inventario</button>
+            <button onclick="switchTab('pedidos')" id="tab-pedidos" class="relative p-4 font-black text-[11px] uppercase tracking-widest text-slate-400">
+                Pedidos <span id="badge-pedidos" class="hidden absolute top-3 -right-2 w-3 h-3 bg-rose-500 rounded-full animate-pulse shadow-sm"></span>
             </button>
         </nav>
 
-        <main id="view-productos" class="p-4 sm:p-5">
-            <div class="mb-5 flex flex-col gap-3">
-                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm transition-all focus:border-emerald-500">
-                <select id="statusFilter" onchange="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm font-bold text-slate-500 appearance-none">
-                    <option value="Todos">📦 Mostrar Todos los Productos</option>
-                    <option value="Publicado">✅ Solo Publicados</option>
-                    <option value="Archivado">📁 Solo Archivados</option>
-                </select>
+        <main id="view-productos" class="p-4">
+            <div class="mb-5 space-y-2">
+                <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="applyFilters()" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none shadow-sm focus:border-emerald-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="categoryFilter" onchange="applyFilters()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold text-slate-500 outline-none">
+                        <option value="Todas">📂 Todas las Categorías</option>
+                    </select>
+                    <select id="statusFilter" onchange="applyFilters()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold text-slate-500 outline-none">
+                        <option value="Todos">📦 Todos los Estados</option>
+                        <option value="Publicado">✅ Publicados</option>
+                        <option value="Archivado">📁 Archivados</option>
+                    </select>
+                </div>
             </div>
             <div id="listaProductos" class="space-y-3"></div>
         </main>
 
-        <main id="view-pedidos" class="p-4 sm:p-5 hidden">
+        <main id="view-pedidos" class="p-4 hidden">
+            <div class="flex gap-2 mb-5 overflow-x-auto pb-2 scrollbar-hide" id="orderFilters">
+                <button onclick="setOrderFilter('Todos')" id="filter-Todos" class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-800 text-white shadow-md">Todos</button>
+                <button onclick="setOrderFilter('Pendiente')" id="filter-Pendiente" class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500">Pendientes</button>
+                <button onclick="setOrderFilter('Confirmado')" id="filter-Confirmado" class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500">Cobrados</button>
+                <button onclick="setOrderFilter('Cancelado')" id="filter-Cancelado" class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500">Rechazados</button>
+            </div>
             <div id="listaPedidos" class="space-y-5"></div>
         </main>
     </div>
@@ -152,12 +174,14 @@
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-black mb-6 text-slate-800">Ajustes del Sistema</h3>
             <div class="space-y-5">
-                <div>
-                    <label class="text-[9px] font-black text-emerald-600 ml-2 uppercase tracking-widest">Enlace de tu Google Sheet</label>
-                    <input id="cfgSheetId" type="text" class="w-full border-b-2 border-emerald-200 py-2 outline-none text-sm font-bold text-emerald-700 bg-emerald-50 px-2 rounded-t-lg" placeholder="Pega el enlace largo aquí">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 block text-center">Modificar PIN de Seguridad</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input id="cfgPin" type="password" maxlength="4" class="w-full bg-white border border-slate-200 p-3 rounded-xl outline-none text-center text-sm font-black tracking-[0.5rem] text-slate-800 focus:border-emerald-500 transition-all shadow-sm" placeholder="Nuevo">
+                        <input id="cfgPinConfirm" type="password" maxlength="4" class="w-full bg-white border border-slate-200 p-3 rounded-xl outline-none text-center text-sm font-black tracking-[0.5rem] text-slate-800 focus:border-emerald-500 transition-all shadow-sm" placeholder="Repetir">
+                    </div>
+                    <p class="text-[8px] text-slate-400 mt-2 text-center font-bold uppercase">Déjalos en blanco si no deseas cambiarlo.</p>
                 </div>
-
-                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Modificar PIN de Acceso</label><input id="cfgPin" type="password" maxlength="4" class="w-full border-b-2 py-2 outline-none text-sm font-black tracking-[0.5rem] text-slate-800 placeholder:tracking-normal placeholder:font-normal" placeholder="••••"></div>
                 
                 <div>
                     <label class="text-[9px] font-black text-slate-400 ml-2 uppercase tracking-widest mb-2 block">Paleta de Marca</label>
@@ -172,10 +196,10 @@
                 <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Nombre Tienda</label><input id="cfgNombre" type="text" class="w-full border-b-2 py-2 outline-none text-sm font-bold"></div>
                 <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Eslogan</label><input id="cfgEslogan" type="text" class="w-full border-b-2 py-2 outline-none text-sm"></div>
                 <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Categorías (Separadas por comas)</label><input id="cfgCategorias" type="text" class="w-full border-b-2 py-2 outline-none text-sm"></div>
-                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">WhatsApp Pedidos</label><input id="cfgWA" type="text" placeholder="18290000000" class="w-full border-b-2 py-2 outline-none text-sm font-bold"></div>
+                <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">WhatsApp Pedidos</label><input id="cfgWA" type="text" class="w-full border-b-2 py-2 outline-none text-sm font-bold"></div>
                 <div><label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Sobre Nosotros</label><textarea id="cfgSobre" class="w-full border-2 border-slate-100 rounded-xl p-3 text-xs h-20 bg-slate-50 outline-none"></textarea></div>
                 
-                <button onclick="vincularYGuardar()" id="btnConfigSave" class="w-full bg-slate-900 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs">Guardar Cambios</button>
+                <button onclick="vincularYGuardar()" id="btnConfigSave" class="w-full bg-slate-900 p-5 rounded-2xl font-black text-white shadow-xl active:scale-95 transition-all uppercase text-xs mt-2">Guardar Cambios</button>
                 
                 <div class="border-t border-slate-100 pt-4 mt-4">
                     <button onclick="triggerReset()" class="w-full bg-rose-50 text-rose-500 p-4 rounded-xl font-black uppercase text-[9px] tracking-widest border border-rose-100 hover:bg-rose-500 hover:text-white transition-colors">⚠️ Configuración Inicial (Borrar Todo)</button>
@@ -222,15 +246,79 @@
         </div>
     </div>
 
+    <div id="modalDialog" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-[3000] backdrop-blur-sm">
+        <div class="bg-white w-full max-w-[300px] rounded-[2rem] p-6 shadow-2xl text-center animate-scale-in">
+            <h4 id="dialogTitle" class="text-lg font-black text-slate-800 mb-2 tracking-tight">Atención</h4>
+            <p id="dialogMessage" class="text-xs text-slate-500 font-bold mb-5 leading-relaxed whitespace-pre-line"></p>
+            <input type="password" id="dialogInput" class="w-full bg-slate-100 p-4 rounded-xl outline-none text-center text-xl font-black tracking-[0.5rem] border-2 border-transparent focus:border-emerald-500 transition-all mb-5 hidden" placeholder="••••" maxlength="4">
+            <div class="flex gap-2 w-full">
+                <button id="dialogCancel" onclick="NexusDialog.close(false)" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors hidden">Cancelar</button>
+                <button id="dialogConfirm" onclick="NexusDialog.submit()" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-transform">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
     <button onclick="openAddModal()" id="btnAddFloat" class="fixed bottom-8 right-6 w-16 h-16 rounded-full shadow-2xl text-4xl text-white flex items-center justify-center border-4 border-white bg-custom-primary z-40 active:scale-90 transition-transform">+</button>
 
     <script>
         // ==========================================
-        // 1. SISTEMA DE SEGURIDAD Y AUTO-TIMEOUT
+        // PWA REGISTRATION & LOGIC
+        // ==========================================
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwaBanner').classList.remove('hidden');
+        });
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') dismissPWA();
+            }
+        }
+        function dismissPWA() { document.getElementById('pwaBanner').classList.add('hidden'); }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
+        // ==========================================
+        // SISTEMA DE DIÁLOGOS NATIVOS
+        // ==========================================
+        const NexusDialog = {
+            resolvePromise: null,
+            show: function(type, message, title = "Atención") {
+                return new Promise((resolve) => {
+                    document.getElementById('dialogTitle').innerText = title;
+                    document.getElementById('dialogMessage').innerText = message;
+                    const inputEl = document.getElementById('dialogInput');
+                    const btnCancel = document.getElementById('dialogCancel');
+                    inputEl.value = "";
+                    inputEl.style.display = (type === 'prompt') ? 'block' : 'none';
+                    btnCancel.style.display = (type === 'alert') ? 'none' : 'block';
+                    document.getElementById('modalDialog').classList.remove('hidden');
+                    document.getElementById('modalDialog').classList.add('flex');
+                    if(type === 'prompt') setTimeout(() => inputEl.focus(), 100);
+                    this.resolvePromise = resolve;
+                });
+            },
+            close: function(value) {
+                document.getElementById('modalDialog').classList.add('hidden');
+                document.getElementById('modalDialog').classList.remove('flex');
+                if (this.resolvePromise) { this.resolvePromise(value); this.resolvePromise = null; }
+            },
+            submit: function() {
+                const inputEl = document.getElementById('dialogInput');
+                if (inputEl.style.display === 'block') { this.close(inputEl.value); } else { this.close(true); }
+            },
+            alert: function(msg, title) { return this.show('alert', msg, title); },
+            confirm: function(msg, title) { return this.show('confirm', msg, title); },
+            prompt: function(msg, title) { return this.show('prompt', msg, title); }
+        };
+
+        // ==========================================
+        // MOTOR PRINCIPAL Y SEGURIDAD
         // ==========================================
         let appData = { productos: [], pedidos: [], config: {}, resumen: {} };
         let currentPin = "1234";
-        let dataPreloaded = false;
         let pollingInterval;
         let pinAttempts = 0; 
         const telefonoSoporte = "18290000000"; 
@@ -239,9 +327,7 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             if(localStorage.getItem("nx_session") === "valid") {
-                inactivityTimer = setTimeout(() => {
-                    logout("Sesión cerrada por inactividad (10 min).");
-                }, 10 * 60 * 1000); 
+                inactivityTimer = setTimeout(() => { logout("Sesión cerrada por inactividad (10 min)."); }, 10 * 60 * 1000); 
             }
         }
         window.addEventListener('mousemove', resetInactivityTimer);
@@ -249,39 +335,39 @@
         window.addEventListener('touchstart', resetInactivityTimer);
 
         window.onload = async () => { 
-            // EL CAMBIO ESTRELLA: Usar NEXUS_CONFIG directamente y saltarnos el localStorage para el ID de tienda
             const shopId = NEXUS_CONFIG.getShopId();
-            
             if(shopId) {
+                document.getElementById('pinContainer').style.display = 'none';
                 document.getElementById('pinLoader').classList.remove('hidden');
-                document.getElementById('loginSubtitle').innerHTML = `<span class="loader" id="pinLoader"></span> Conectando motor...`;
-                
+                document.getElementById('loginSubtitle').innerHTML = `<span class="loader" id="pinLoader"></span> Sincronizando Motor...`;
                 try {
                     const res = await NexusCore.ejecutar('getInitData');
                     if(res.success) {
                         appData = res;
                         currentPin = String(appData.config.PIN_Acceso || "1234"); 
-                        dataPreloaded = true;
                         
+                        if (!appData.config.Nombre_Tienda || appData.config.Nombre_Tienda.trim() === "") {
+                            document.getElementById("loginSection").style.display = "none";
+                            toggleModal('modalWizard', true);
+                            return; 
+                        }
+
                         document.getElementById('pinLoader').classList.add('hidden');
                         document.getElementById('loginSubtitle').innerText = "SISTEMA LISTO";
-                        
+                        const pinContainer = document.getElementById("pinContainer");
+                        pinContainer.style.display = "block";
+                        pinContainer.classList.add("animate-scale-in");
                         const input = document.getElementById("pinInput");
                         input.disabled = false;
                         input.classList.remove('opacity-50');
                         input.focus();
-
-                        if(localStorage.getItem("nx_session") === "valid") {
-                            initPreloaded();
-                        }
+                        if(localStorage.getItem("nx_session") === "valid") { initPreloaded(); }
                     } else { throw new Error("ID Inválido"); }
                 } catch(e) {
-                    alert("Error conectando con la base de datos.");
+                    NexusDialog.alert("Error conectando con la base de datos.", "Error");
                     document.getElementById('loginSubtitle').innerText = "ERROR DE CONEXIÓN";
                 }
-            } else {
-                alert("No se encontró el ID en config.js");
-            }
+            } else { NexusDialog.alert("No se encontró el ID en config.js", "Error"); }
         }
 
         const pinInput = document.getElementById("pinInput");
@@ -296,21 +382,15 @@
                     const container = document.getElementById("loginErrorContainer");
                     const errorMsg = document.getElementById("loginError");
                     const supportBtn = document.getElementById("supportBtn");
-                    
                     container.classList.remove("hidden");
-                    
                     if (pinAttempts >= 5) {
                         pinInput.disabled = true;
-                        pinInput.classList.add('opacity-50');
-                        errorMsg.innerText = "Demasiados intentos. Tu panel ha sido bloqueado temporalmente.";
-                        
-                        supportBtn.href = `https://wa.me/${telefonoSoporte}?text=${encodeURIComponent("Hola, necesito asistencia. He bloqueado mi panel de Nexus Pro intentando ingresar el PIN.")}`;
+                        errorMsg.innerText = "Panel bloqueado.";
+                        supportBtn.href = `https://wa.me/${telefonoSoporte}?text=Hola, bloqueé mi panel.`;
                         supportBtn.classList.remove("hidden");
-                        supportBtn.classList.add("inline-block");
-                        
                         document.getElementById("loginHint").classList.add("hidden");
                     } else {
-                        errorMsg.innerText = `PIN Incorrecto (Intento ${pinAttempts}/5)`;
+                        errorMsg.innerText = `PIN Incorrecto (${pinAttempts}/5)`;
                         pinInput.value = "";
                         setTimeout(() => { if(pinAttempts < 5) container.classList.add("hidden"); }, 2500);
                     }
@@ -318,40 +398,31 @@
             }
         });
 
-        function logout(msg = null) { 
+        async function logout(msg = null) { 
             localStorage.removeItem("nx_session"); 
-            if(msg) alert(msg);
+            if(msg) { await NexusDialog.alert(msg, "Sesión Expirada"); }
             location.reload(); 
         }
 
         // ==========================================
-        // 2. INICIO CON DATOS PRE-CARGADOS
+        // INICIO Y CONFIGURACIÓN
         // ==========================================
         let selectedColor = "#10b981";
         let wizSelectedColor = "#10b981";
         let currentTab = 'productos';
+        let currentOrderFilter = 'Todos';
 
         function initPreloaded() {
             document.getElementById("loginSection").style.display = "none";
-            document.getElementById("adminContent").style.display = "block";
+            document.getElementById("adminContent").style.display = ""; 
             resetInactivityTimer();
-
             applyConfig();
-            
-            if (!appData.config.Nombre_Tienda) {
-                toggleModal('modalWizard', true);
-            }
-
             renderProductos(appData.productos);
             renderPedidos();
-            
             clearInterval(pollingInterval);
             pollingInterval = setInterval(syncOrdersSilently, 5000);
         }
 
-        // ==========================================
-        // 3. WIZARD Y FACTORY RESET
-        // ==========================================
         function selectWizTheme(color) {
             wizSelectedColor = color;
             document.querySelectorAll("#wizThemeSelector .theme-card").forEach(c => {
@@ -362,65 +433,63 @@
         async function saveWizard() {
             const wizPin = document.getElementById("wizPin").value.trim();
             const wizPinConfirm = document.getElementById("wizPinConfirm").value.trim();
-
-            if (wizPin.length !== 4) return alert("El PIN de acceso debe tener exactamente 4 números.");
-            if (wizPin !== wizPinConfirm) return alert("Los PINs no coinciden. Por favor verifícalos.");
-
+            if (wizPin.length !== 4) return NexusDialog.alert("El PIN debe tener 4 números.", "Aviso");
+            if (wizPin !== wizPinConfirm) return NexusDialog.alert("Los PINs no coinciden.", "Aviso");
             const btn = document.getElementById("btnWizSave");
-            btn.innerText = "CREANDO TIENDA..."; btn.disabled = true;
-
+            btn.innerText = "CREANDO..."; btn.disabled = true;
             const payload = {
-                PIN_Acceso: wizPin,
-                Nombre_Tienda: document.getElementById("wizNombre").value,
-                Eslogan: document.getElementById("wizEslogan").value,
-                Sobre_Nosotros: document.getElementById("wizSobre").value,
-                Color_Primario: wizSelectedColor,
-                Categorias_Lista: document.getElementById("wizCategorias").value || "General",
+                PIN_Acceso: wizPin, Nombre_Tienda: document.getElementById("wizNombre").value,
+                Eslogan: document.getElementById("wizEslogan").value, Sobre_Nosotros: document.getElementById("wizSobre").value,
+                Color_Primario: wizSelectedColor, Categorias_Lista: document.getElementById("wizCategorias").value || "General",
                 WhatsApp: document.getElementById("wizWA").value 
             };
-
             const res = await NexusCore.ejecutar('vincularTienda', payload);
             if(res.success) { location.reload(); }
         }
 
         async function triggerReset() {
-            if(confirm("⚠️ ADVERTENCIA: Si procede a realizar la configuración inicial debe tener pendiente que SE LE BORRARÁN TODOS LOS PRODUCTOS y pedidos de su tienda.\n\n¿Está seguro de que desea continuar?")) {
-                let pinConfirm = prompt("Ingrese su PIN de seguridad para confirmar:");
-                if(pinConfirm === currentPin) {
+            const confirmado = await NexusDialog.confirm("⚠️ ADVERTENCIA CRÍTICA\n\n¿Borrar toda la configuración y productos?", "Peligro");
+            if (confirmado) {
+                const pinConfirm = await NexusDialog.prompt("Ingresa tu PIN para autorizar:", "Verificación");
+                if (pinConfirm === currentPin) {
                     toggleModal('modalConfig', false);
-                    const res = await NexusCore.ejecutar('resetTienda');
-                    if(res.success) {
-                        alert("Tienda borrada con éxito. Proceda a configurarla nuevamente.");
-                        appData.config = {}; 
-                        toggleModal('modalWizard', true);
-                    }
-                } else {
-                    alert("PIN incorrecto. Operación cancelada por seguridad.");
-                }
+                    document.getElementById("loginSection").style.display = "flex";
+                    document.getElementById("pinContainer").style.display = "none";
+                    await NexusCore.ejecutar('vincularTienda', { Nombre_Tienda: " ", Eslogan: " ", Categorias_Lista: " ", WhatsApp: " ", Sobre_Nosotros: " ", PIN_Acceso: " " });
+                    await NexusCore.ejecutar('resetTienda');
+                    localStorage.removeItem("nx_session");
+                    await NexusDialog.alert("Sistema reiniciado.", "Completado");
+                    location.reload();
+                } else if (pinConfirm !== null) { NexusDialog.alert("PIN incorrecto.", "Error"); }
             }
         }
 
-        // ==========================================
-        // 4. CONFIGURACIÓN DEL SISTEMA
-        // ==========================================
         function applyConfig() {
             const cfg = appData.config || {};
-            
-            document.getElementById("cfgSheetId").value = localStorage.getItem("nexus_shop_id") || "";
-            document.getElementById("cfgPin").value = currentPin; 
-            
+            document.getElementById("cfgPin").value = ""; 
+            document.getElementById("cfgPinConfirm").value = ""; 
             document.getElementById("displayTienda").innerText = cfg.Nombre_Tienda || "Mi Tienda";
+            document.title = (cfg.Nombre_Tienda ? cfg.Nombre_Tienda + " - Admin" : "Nexus Pro - Panel"); 
             document.getElementById("cfgNombre").value = cfg.Nombre_Tienda || "";
             document.getElementById("cfgEslogan").value = cfg.Eslogan || "";
             document.getElementById("cfgCategorias").value = cfg.Categorias_Lista || "";
             document.getElementById("cfgWA").value = cfg.WhatsApp || "";
             document.getElementById("cfgSobre").value = cfg.Sobre_Nosotros || "";
-            
             selectTheme(cfg.Color_Primario || "#10b981");
             
-            let categoriasApp = ["General"];
-            if(cfg.Categorias_Lista) categoriasApp = ["General", ...cfg.Categorias_Lista.split(",").map(c => c.trim()).filter(Boolean)];
-            document.getElementById("pCategoria").innerHTML = categoriasApp.map(c => `<option value="${c}">${c}</option>`).join("");
+            let cats = [];
+            if(cfg.Categorias_Lista) cats = cfg.Categorias_Lista.split(",").map(c => c.trim()).filter(Boolean);
+            
+            const catFilter = document.getElementById("categoryFilter");
+            const pCat = document.getElementById("pCategoria");
+            
+            catFilter.innerHTML = '<option value="Todas">📂 Todas las Categorías</option>';
+            pCat.innerHTML = '<option value="General">General</option>';
+            
+            cats.forEach(c => {
+                catFilter.innerHTML += `<option value="${c}">${c}</option>`;
+                pCat.innerHTML += `<option value="${c}">${c}</option>`;
+            });
         }
 
         function selectTheme(color) {
@@ -432,24 +501,9 @@
         }
 
         async function vincularYGuardar() {
-            let inputVal = document.getElementById("cfgSheetId").value.trim();
-            if(!inputVal) return alert("Por favor, pega el enlace de tu Google Sheet.");
-            
             const newPin = document.getElementById("cfgPin").value.trim();
-            if(newPin && newPin.length !== 4) return alert("El PIN debe tener 4 dígitos.");
-
-            const btn = document.getElementById("btnConfigSave");
-            btn.innerText = "Sincronizando..."; btn.disabled = true;
-
-            let finalId = inputVal;
-            if (inputVal.includes("docs.google.com/spreadsheets/d/")) {
-                const match = inputVal.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                if (match && match[1]) finalId = match[1]; 
-                else { btn.innerText = "Guardar Cambios"; btn.disabled = false; return alert("Enlace inválido."); }
-            }
+            const confirmPin = document.getElementById("cfgPinConfirm").value.trim();
             
-            localStorage.setItem("nexus_shop_id", finalId);
-
             const payload = {
                 Nombre_Tienda: document.getElementById("cfgNombre").value,
                 Eslogan: document.getElementById("cfgEslogan").value,
@@ -459,19 +513,91 @@
                 Color_Primario: selectedColor
             };
 
-            if(newPin) payload.PIN_Acceso = newPin;
-
-            const res = await NexusCore.ejecutar('vincularTienda', payload);
-            if(res.success) {
-                location.reload(); 
-            } else {
-                alert("Error: " + res.message);
-                btn.innerText = "Guardar Cambios"; btn.disabled = false;
+            if(newPin || confirmPin) {
+                if(newPin.length !== 4) return NexusDialog.alert("El nuevo PIN debe tener exactamente 4 dígitos.", "Seguridad");
+                if(newPin !== confirmPin) return NexusDialog.alert("Los PINs no coinciden. Asegúrate de escribir el mismo número en ambos campos.", "Error de Seguridad");
+                payload.PIN_Acceso = newPin;
             }
+            
+            const btn = document.getElementById("btnConfigSave");
+            btn.innerText = "Sincronizando..."; btn.disabled = true;
+            
+            const res = await NexusCore.ejecutar('vincularTienda', payload);
+            if(res.success) { location.reload(); }
+            else { NexusDialog.alert("Error: " + res.message, "Error"); btn.disabled = false; }
         }
 
         // ==========================================
-        // 5. POLLING SILENCIOSO
+        // RENDER DE PRODUCTOS Y FILTROS
+        // ==========================================
+        function applyFilters() {
+            const term = document.getElementById("searchInput").value.toLowerCase();
+            const cat = document.getElementById("categoryFilter").value;
+            const status = document.getElementById("statusFilter").value;
+            
+            const filtrados = appData.productos.filter(p => {
+                const matchName = p.nombre.toLowerCase().includes(term);
+                const matchCat = (cat === "Todas" || p.categoria === cat);
+                const matchStatus = (status === "Todos" || p.estado === status);
+                return matchName && matchCat && matchStatus;
+            });
+            renderProductos(filtrados);
+        }
+
+        function renderProductos(prods) {
+            document.getElementById("dashInversion").innerText = `RD$ ${Number(appData.resumen.totalInversion || 0).toLocaleString()}`;
+            document.getElementById("dashGanancia").innerText = `RD$ ${Number(appData.resumen.gananciaEstimada || 0).toLocaleString()}`;
+            document.getElementById("dashStock").innerText = appData.resumen.productosActivos || 0;
+            const container = document.getElementById("listaProductos");
+            if(prods.length === 0) { container.innerHTML = `<p class="text-center text-[10px] text-slate-400 p-6">Inventario vacío o sin resultados.</p>`; return; }
+            container.innerHTML = prods.map(p => `
+                <div class="app-card p-4 flex items-center gap-4 border-l-[6px] ${p.estado === 'Archivado' ? 'border-slate-300 opacity-60' : 'border-custom-primary'}">
+                    <img src="${p.imagen}" class="w-14 h-14 object-cover rounded-xl bg-slate-50 cursor-pointer" onclick="openEditModal('${p.id}')">
+                    <div class="flex-1" onclick="openEditModal('${p.id}')">
+                        <div class="flex justify-between items-start mb-1 gap-2"><h4 class="text-[12px] font-black text-slate-700 leading-tight uppercase">${p.nombre}</h4><span class="status-pill ${p.estado === 'Archivado' ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'}">${p.estado}</span></div>
+                        <p class="text-[14px] font-black text-primary">RD$ ${Number(p.precio).toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Stock: ${p.stock} | ${p.categoria || 'Gral'}</p>
+                    </div>
+                </div>`).join("");
+        }
+
+        // ==========================================
+        // PROCESAMIENTO DE PRODUCTO (RESTAUARDO AL 100%)
+        // ==========================================
+        async function processProduct() {
+            const btn = document.getElementById("btnSave"); 
+            btn.disabled = true; btn.innerText = "SUBIENDO...";
+            
+            const file = document.getElementById("fileInput").files[0];
+            let base64 = null; 
+            if(file) base64 = await NexusCore.archivoABase64(file);
+            
+            const payload = {
+                id: document.getElementById("editId").value, 
+                nombre: document.getElementById("pNombre").value, 
+                categoria: document.getElementById("pCategoria").value,
+                precio: document.getElementById("pPrecio").value, 
+                costo: document.getElementById("pCosto").value,
+                stock: document.getElementById("pStock").value, 
+                estado: document.getElementById("pEstado").value,
+                detalle: document.getElementById("pDetalle").value, 
+                foto: base64, 
+                fileName: file ? file.name : ""
+            };
+            
+            const res = await NexusCore.ejecutar('saveProduct', payload);
+            if (res.success) {
+                toggleModal("modalProduct", false); 
+                document.getElementById("successMessage").innerText = payload.id ? "Actualizado." : "Guardado.";
+                toggleModal("modalSuccess", true);
+                const refreshData = await NexusCore.ejecutar('getInitData');
+                if (refreshData.success) { appData = refreshData; applyFilters(); }
+            } else { NexusDialog.alert("Error: " + res.message, "Error"); }
+            btn.disabled = false; btn.innerText = "Guardar Producto";
+        }
+
+        // ==========================================
+        // GESTOR DE PEDIDOS (RESTAURADO AL 100%)
         // ==========================================
         async function syncOrdersSilently() {
             try {
@@ -488,107 +614,54 @@
             } catch(e) {}
         }
 
-        // ==========================================
-        // 6. RENDER DE PRODUCTOS E INVENTARIO
-        // ==========================================
-        function applyFilters() {
-            const term = document.getElementById("searchInput").value.toLowerCase();
-            const status = document.getElementById("statusFilter").value;
-            renderProductos(appData.productos.filter(p => p.nombre.toLowerCase().includes(term) && (status === "Todos" || p.estado === status)));
+        function setOrderFilter(status) {
+            currentOrderFilter = status;
+            ['Todos', 'Pendiente', 'Confirmado', 'Cancelado'].forEach(f => {
+                const btn = document.getElementById('filter-' + f);
+                if(btn) { btn.className = (f === status) ? "whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-800 text-white shadow-md" : "whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500 hover:bg-slate-200"; }
+            });
+            renderPedidos();
         }
 
-        function renderProductos(prods) {
-            document.getElementById("dashInversion").innerText = `RD$ ${Number(appData.resumen.totalInversion || 0).toLocaleString()}`;
-            document.getElementById("dashGanancia").innerText = `RD$ ${Number(appData.resumen.gananciaEstimada || 0).toLocaleString()}`;
-            document.getElementById("dashStock").innerText = appData.resumen.productosActivos || 0;
-
-            const container = document.getElementById("listaProductos");
-            if(prods.length === 0) { container.innerHTML = `<p class="text-center text-[10px] text-slate-400 font-bold p-6">Inventario vacío.</p>`; return; }
-
-            container.innerHTML = prods.map(p => `
-                <div class="app-card p-4 flex items-center gap-4 border-l-[6px] ${p.estado === 'Archivado' ? 'border-slate-300 opacity-60' : 'border-custom-primary'}">
-                    <img src="${p.imagen}" class="w-14 h-14 object-cover rounded-xl bg-slate-50 cursor-pointer" onclick="openEditModal('${p.id}')">
-                    <div class="flex-1" onclick="openEditModal('${p.id}')">
-                        <div class="flex justify-between items-start mb-1 gap-2"><h4 class="text-[12px] font-black text-slate-700 leading-tight uppercase">${p.nombre}</h4><span class="status-pill ${p.estado === 'Archivado' ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'}">${p.estado}</span></div>
-                        <p class="text-[14px] font-black text-primary tracking-tighter">RD$ ${Number(p.precio).toLocaleString()}</p>
-                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">Stock: ${p.stock} | ${p.categoria || 'Gral'}</p>
-                    </div>
-                </div>`).join("");
-        }
-
-        async function processProduct() {
-            const btn = document.getElementById("btnSave"); btn.disabled = true; btn.innerText = "SUBIENDO...";
-            const file = document.getElementById("fileInput").files[0]; const id = document.getElementById("editId").value;
-            let base64 = null; if(file) base64 = await NexusCore.archivoABase64(file);
-
-            const payload = {
-                id: id, nombre: document.getElementById("pNombre").value, categoria: document.getElementById("pCategoria").value,
-                precio: document.getElementById("pPrecio").value, costo: document.getElementById("pCosto").value,
-                stock: document.getElementById("pStock").value, estado: document.getElementById("pEstado").value,
-                detalle: document.getElementById("pDetalle").value, foto: base64, fileName: file ? file.name : ""
-            };
-
-            const res = await NexusCore.ejecutar('saveProduct', payload);
-            if (res.success) {
-                toggleModal("modalProduct", false); 
-                document.getElementById("successMessage").innerText = id ? "Producto actualizado." : "Nuevo producto guardado.";
-                toggleModal("modalSuccess", true);
-                
-                const refreshData = await NexusCore.ejecutar('getInitData');
-                if (refreshData.success) {
-                    appData = refreshData;
-                    applyFilters(); 
-                }
-            } else { alert("Error al guardar: " + res.message); }
-            btn.disabled = false; btn.innerText = "Guardar Producto";
-        }
-
-        // ==========================================
-        // 7. GESTOR DE PEDIDOS (DISEÑO MEJORADO)
-        // ==========================================
         function renderPedidos() {
             const container = document.getElementById("listaPedidos");
-            if(!appData.pedidos || appData.pedidos.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-3xl">No hay pedidos registrados</div>`; return; }
-
-            container.innerHTML = appData.pedidos.map((p) => {
-                let statusClass = "bg-yellow-50 text-yellow-600"; 
-                let borderClass = "border-l-yellow-400";
-                
+            let counts = { 'Todos': 0, 'Pendiente': 0, 'Confirmado': 0, 'Cancelado': 0 };
+            if(appData.pedidos) {
+                counts['Todos'] = appData.pedidos.length;
+                appData.pedidos.forEach(p => { if (counts[p.estado] !== undefined) counts[p.estado]++; });
+            }
+            document.getElementById('filter-Todos').innerText = `Todos (${counts['Todos']})`;
+            document.getElementById('filter-Pendiente').innerText = `Pendientes (${counts['Pendiente']})`;
+            document.getElementById('filter-Confirmado').innerText = `Cobrados (${counts['Confirmado']})`;
+            document.getElementById('filter-Cancelado').innerText = `Rechazados (${counts['Cancelado']})`;
+            
+            if(!appData.pedidos || appData.pedidos.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs uppercase border-2 border-dashed border-slate-200 rounded-3xl">Sin pedidos</div>`; return; }
+            const filtrados = currentOrderFilter === 'Todos' ? appData.pedidos : appData.pedidos.filter(p => p.estado === currentOrderFilter);
+            if (filtrados.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-bold text-xs border-2 border-dashed border-slate-200 rounded-3xl">Categoría vacía</div>`; return; }
+            
+            container.innerHTML = filtrados.map((p) => {
+                let statusClass = "bg-yellow-50 text-yellow-600"; let borderClass = "border-l-yellow-400";
                 if (p.estado === 'Confirmado') { statusClass = "bg-emerald-50 text-emerald-600"; borderClass = "border-l-emerald-400"; }
                 if (p.estado === 'Cancelado') { statusClass = "bg-rose-50 text-rose-600"; borderClass = "border-l-rose-400"; }
                 if (p.estado === 'Expirado') { statusClass = "bg-slate-100 text-slate-500"; borderClass = "border-l-slate-300"; }
-
-                const detallesHtml = p.detalles.split('\n').filter(l => l.trim() !== '').map(l => `<div class="border-b border-slate-100 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0 text-slate-600">▪️ ${l}</div>`).join('');
-
+                
+                const detalles = p.detalles.split('\n').filter(l => l.trim() !== '').map(l => `<div class="border-b border-slate-100 pb-2 mb-2 last:border-0 text-slate-600">▪️ ${l}</div>`).join('');
                 return `
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[6px] ${borderClass} flex flex-col gap-3">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-l-[6px] ${borderClass} flex flex-col gap-3">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[13px] font-black text-slate-800 tracking-tighter">ORDEN ${p.id}</p>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">${p.fecha}</p>
-                        </div>
+                        <div><p class="text-[13px] font-black text-slate-800">ORDEN ${p.id}</p><p class="text-[9px] font-bold text-slate-400 uppercase mt-1">${p.fecha}</p></div>
                         <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${statusClass}">${p.estado}</span>
                     </div>
-                    
-                    <div class="text-[11px] font-semibold bg-slate-50/50 p-3 rounded-xl border border-slate-50">
-                        ${detallesHtml}
-                    </div>
-                    
+                    <div class="text-[11px] font-semibold bg-slate-50/50 p-3 rounded-xl">${detalles}</div>
                     <div class="flex justify-between items-center pt-2">
-                        <div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Total</p>
-                            <p class="text-lg font-black text-slate-800 tracking-tighter">RD$ ${Number(p.total).toLocaleString()}</p>
-                        </div>
-                        
-                        ${p.estado === 'Pendiente' ? `
-                            <div class="flex gap-2">
-                                <button onclick="updateStatus('${p.id}', 'Cancelado')" class="bg-white border border-slate-200 text-slate-500 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-sm">Rechazar</button>
-                                <button onclick="updateStatus('${p.id}', 'Confirmado')" class="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase shadow-md shadow-emerald-200 active:scale-95 transition-all">Cobrar</button>
-                            </div>
-                        ` : ''}
-                        
+                        <div><p class="text-[9px] font-bold text-slate-400 uppercase">Total</p><p class="text-lg font-black text-slate-800">RD$ ${Number(p.total).toLocaleString()}</p></div>
+                        ${p.estado === 'Pendiente' ? `<div class="flex gap-2">
+                            <button onclick="updateStatus('${p.id}', 'Cancelado')" class="bg-white border border-slate-200 text-slate-500 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase shadow-sm">Rechazar</button>
+                            <button onclick="updateStatus('${p.id}', 'Confirmado')" class="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase shadow-md shadow-emerald-200">Cobrar</button>
+                        </div>` : ''}
                         ${p.estado === 'Expirado' ? `<span class="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">⏳ Devuelto autom.</span>` : ''}
                         ${p.estado === 'Cancelado' ? `<span class="text-[9px] text-rose-400 font-bold bg-rose-50 px-2 py-1 rounded-lg">❌ Devuelto manual</span>` : ''}
+                        ${p.estado === 'Confirmado' ? `<span class="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg">✓ Cerrado</span>` : ''}
                     </div>
                 </div>`;
             }).join("");
@@ -596,7 +669,8 @@
 
         async function updateStatus(orderId, nuevoEstado) {
             const accion = nuevoEstado === 'Confirmado' ? 'CONFIRMAR pago' : 'RECHAZAR y DEVOLVER stock';
-            if(!confirm(`¿Deseas ${accion} para la orden ${orderId}?`)) return;
+            const confirmado = await NexusDialog.confirm(`¿Deseas ${accion} para la orden #${orderId}?`, "Gestión");
+            if(!confirmado) return;
             const res = await NexusCore.ejecutar('updateOrderStatus', { orderId, nuevoEstado });
             if(res.success) { 
                 document.getElementById("successMessage").innerText = `Orden ${nuevoEstado}.`; 
@@ -607,15 +681,18 @@
         }
 
         // ==========================================
-        // 8. NAVEGACIÓN Y MODALES
+        // NAVEGACIÓN Y MODALES GLOBALES (RESTAURADOS)
         // ==========================================
         async function switchTab(tab) {
             currentTab = tab;
-            document.getElementById("view-productos").classList.toggle("hidden", tab !== 'productos'); document.getElementById("view-pedidos").classList.toggle("hidden", tab !== 'pedidos');
-            document.getElementById("tab-productos").classList.toggle("tab-active", tab === 'productos'); document.getElementById("tab-productos").classList.toggle("text-slate-400", tab !== 'productos');
-            document.getElementById("tab-pedidos").classList.toggle("tab-active", tab === 'pedidos'); document.getElementById("tab-pedidos").classList.toggle("text-slate-400", tab !== 'pedidos');
+            document.getElementById("view-productos").classList.toggle("hidden", tab !== 'productos'); 
+            document.getElementById("view-pedidos").classList.toggle("hidden", tab !== 'pedidos');
+            document.getElementById("tab-productos").classList.toggle("tab-active", tab === 'productos'); 
+            document.getElementById("tab-productos").classList.toggle("text-slate-400", tab !== 'productos');
+            document.getElementById("tab-pedidos").classList.toggle("tab-active", tab === 'pedidos'); 
+            document.getElementById("tab-pedidos").classList.toggle("text-slate-400", tab !== 'pedidos');
             document.getElementById("btnAddFloat").style.display = tab === 'productos' ? 'flex' : 'none';
-
+            
             if (tab === 'pedidos') {
                 document.getElementById('badge-pedidos').classList.add('hidden'); renderPedidos(); 
                 const btnTab = document.getElementById("tab-pedidos"); btnTab.innerHTML = `ACTUALIZANDO...`;
@@ -625,20 +702,35 @@
         }
 
         function openAddModal() {
-            document.getElementById("editId").value = ""; document.getElementById("pNombre").value = ""; document.getElementById("pPrecio").value = "";
-            document.getElementById("pCosto").value = ""; document.getElementById("pStock").value = ""; document.getElementById("pDetalle").value = "";
-            document.getElementById("preview").src = "https://cdn-icons-png.flaticon.com/512/685/685655.png"; toggleModal("modalProduct", true);
+            document.getElementById("editId").value = ""; 
+            document.getElementById("pNombre").value = ""; 
+            document.getElementById("pPrecio").value = "";
+            document.getElementById("pCosto").value = ""; 
+            document.getElementById("pStock").value = ""; 
+            document.getElementById("pDetalle").value = "";
+            document.getElementById("pEstado").value = "Publicado";
+            document.getElementById("preview").src = "https://cdn-icons-png.flaticon.com/512/685/685655.png";
+            document.getElementById("fileInput").value = "";
+            toggleModal("modalProduct", true);
         }
 
         function openEditModal(id) {
             const p = appData.productos.find(x => x.id == id);
-            document.getElementById("editId").value = p.id; document.getElementById("pNombre").value = p.nombre; document.getElementById("pCategoria").value = p.categoria || "General";
-            document.getElementById("pPrecio").value = p.precio; document.getElementById("pCosto").value = p.costo || ""; document.getElementById("pStock").value = p.stock;
-            document.getElementById("pEstado").value = p.estado; document.getElementById("pDetalle").value = p.detalle || ""; document.getElementById("preview").src = p.imagen;
+            document.getElementById("editId").value = p.id; 
+            document.getElementById("pNombre").value = p.nombre; 
+            document.getElementById("pCategoria").value = p.categoria || "General";
+            document.getElementById("pPrecio").value = p.precio; 
+            document.getElementById("pCosto").value = p.costo || ""; 
+            document.getElementById("pStock").value = p.stock;
+            document.getElementById("pEstado").value = p.estado || "Publicado"; 
+            document.getElementById("pDetalle").value = p.detalle || ""; 
+            document.getElementById("preview").src = p.imagen || "https://cdn-icons-png.flaticon.com/512/685/685655.png";
+            document.getElementById("fileInput").value = "";
             toggleModal("modalProduct", true);
         }
 
         function previewImg(e) { const f = e.target.files[0]; if(f) document.getElementById("preview").src = URL.createObjectURL(f); }
+        
         function toggleModal(id, s) { document.getElementById(id).classList.toggle("hidden", !s); if(s) document.getElementById(id).classList.add("flex"); }
     </script>
 </body>
